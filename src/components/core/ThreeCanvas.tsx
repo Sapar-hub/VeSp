@@ -1,13 +1,19 @@
 import React, { useRef, useEffect } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
+import { Canvas, useThree, PointerEvent } from '@react-three/fiber';
 import { OrbitControls, Grid } from '@react-three/drei';
-import useStore from '../../store/mainStore';
+import useStore, { Vector } from '../../store/mainStore';
 import * as ObjectDrawer from '../../rendering/ObjectDrawer';
 import { InputController } from '../../io/InputController';
 import * as THREE from 'three';
 
 const Scene: React.FC<{ inputController: InputController | null }> = ({ inputController }) => {
-    const { objects, selectedObjectId, multiSelection, isProjectionExplorerActive, tempObjects } = useStore();
+    const { objects, selectedObjectId, multiSelection, isProjectionExplorerActive, tempObjects } = useStore(state => ({
+        objects: state.objects,
+        selectedObjectId: state.selectedObjectId,
+        multiSelection: state.multiSelection,
+        isProjectionExplorerActive: state.isProjectionExplorerActive,
+        tempObjects: state.tempObjects,
+    }));
     const { scene, camera } = useThree();
 
     useEffect(() => {
@@ -30,8 +36,21 @@ const Scene: React.FC<{ inputController: InputController | null }> = ({ inputCon
                     case 'vector':
                         const vec = ObjectDrawer.drawVector(obj);
                         if (isSelected) {
-                            (vec.children[0] as THREE.Mesh).material.color.set('#007bff');
-                            (vec.children[1] as THREE.Line).material.color.set('#007bff');
+                            const arrow = vec.children[0] as THREE.Mesh;
+                            if (arrow.material && Array.isArray(arrow.material)) {
+                                arrow.material.forEach(mat => (mat as THREE.MeshBasicMaterial).color.set('#007bff'));
+                            } else if (arrow.material) {
+                                (arrow.material as THREE.MeshBasicMaterial).color.set('#007bff');
+                            }
+                            
+                            if (vec.children[1]) {
+                                const line = vec.children[1] as THREE.Line;
+                                if (line.material && Array.isArray(line.material)) {
+                                    line.material.forEach(mat => (mat as THREE.LineBasicMaterial).color.set('#007bff'));
+                                } else if (line.material) {
+                                    (line.material as THREE.LineBasicMaterial).color.set('#007bff');
+                                }
+                            }
                         }
                         return <primitive key={obj.id} object={vec} />;
                     case 'point':
@@ -48,7 +67,7 @@ const Scene: React.FC<{ inputController: InputController | null }> = ({ inputCon
             {isProjectionExplorerActive && <primitive object={ObjectDrawer.drawProjectionPlane()} />}
             {isProjectionExplorerActive && Array.from(objects.values()).filter(o => o.type === 'vector').map(obj => (
                 <React.Fragment key={`proj-${obj.id}`}>
-                    <primitive object={ObjectDrawer.drawProjectedVector(obj as any)} />
+                    <primitive object={ObjectDrawer.drawProjectedVector(obj as Vector)} />
                     <primitive object={ObjectDrawer.drawProjectionLine(obj.end, [obj.end[0], obj.end[1], 0])} />
                      <primitive object={ObjectDrawer.drawProjectionLine(obj.start, [obj.start[0], obj.start[1], 0])} />
                 </React.Fragment>
@@ -57,7 +76,7 @@ const Scene: React.FC<{ inputController: InputController | null }> = ({ inputCon
             {tempObjects.map(obj => {
                  if (!obj.visible) return null;
                  if (obj.type === 'vector') {
-                     return <primitive key={obj.id} object={ObjectDrawer.drawVector(obj)} />;
+                     return <primitive key={obj.id} object={ObjectDrawer.drawVector(obj as Vector)} />;
                  }
                  return null;
             })}
@@ -66,20 +85,19 @@ const Scene: React.FC<{ inputController: InputController | null }> = ({ inputCon
 };
 
 export const ThreeCanvas: React.FC = () => {
-    const store = useStore();
     const inputController = useRef<InputController | null>(null);
 
     useEffect(() => {
-        inputController.current = new InputController(store);
-    }, [store]);
+        inputController.current = new InputController(useStore);
+    }, []);
 
     return (
         <Canvas
             camera={{ position: [5, 5, 10], fov: 60 }}
             style={{ background: '#111' }}
-            onPointerDown={(e) => inputController.current?.handlePointerDown(e as any)}
-            onPointerMove={(e) => inputController.current?.handlePointerMove(e as any)}
-            onPointerUp={(e) => inputController.current?.handlePointerUp(e as any)}
+            onPointerDown={(e: PointerEvent) => inputController.current?.handlePointerDown(e)}
+            onPointerMove={(e: PointerEvent) => inputController.current?.handlePointerMove(e)}
+            onPointerUp={(e: PointerEvent) => inputController.current?.handlePointerUp(e)}
         >
             <Scene inputController={inputController.current} />
             <OrbitControls makeDefault />

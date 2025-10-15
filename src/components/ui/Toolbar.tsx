@@ -84,7 +84,7 @@ export const Toolbar: React.FC = () => {
                 Change Basis
             </button>
             <div style={separatorStyle}></div>
-            <select style={selectStyle} value={visualizationMode} onChange={e => setVisualizationMode(e.target.value as any)}>
+            <select style={selectStyle} value={visualizationMode} onChange={e => setVisualizationMode(e.target.value as 'none' | 'tip-to-tail' | 'parallelogram')}>
                 <option value="none">Vis: None</option>
                 <option value="tip-to-tail">Vis: Tip-to-Tail</option>
                 <option value="parallelogram">Vis: Parallelogram</option>

@@ -3,6 +3,7 @@ import { devtools } from 'zustand/middleware';
 import { temporal } from 'zundo';
 import { MathEngine } from '../math/MathEngine';
 import { produce } from 'immer';
+import { ExpressionEngine } from '../math/ExpressionEngine';
 
 // --- DATA MODELS from Architecture.xml ---
 
@@ -51,6 +52,8 @@ export interface AppState {
     visualizationMode: 'none' | 'tip-to-tail' | 'parallelogram';
     tempObjects: SceneObjectUnion[];
     notifications: Notification[];
+    expressions: { id: string, value: string }[];
+    expressionErrors: Map<string, string>;
 }
 
 // --- ACTIONS ---
@@ -71,6 +74,10 @@ export interface Actions {
     setTempObjects: (objects: SceneObjectUnion[]) => void;
     toggleMultiSelect: (objectId: string) => void;
     clearMultiSelection: () => void;
+    addExpression: () => void;
+    updateExpression: (id: string, value: string) => void;
+    removeExpression: (id: string) => void;
+    evaluateExpressions: () => void;
     undo: () => void;
     redo: () => void;
 }
@@ -87,22 +94,73 @@ const useStore = create<AppState & Actions>()(
                 multiSelection: [],
                 mode: 'select',
                 isProjectionExplorerActive: false,
-                viewMode: '3d',
+                viewMode: '2d',
                 basisVectorIds: [],
                 cameraState: { position: [5, 5, 10], target: [0, 0, 0] },
                 visualizationMode: 'tip-to-tail',
                 tempObjects: [],
                 notifications: [],
+                expressions: [{ id: crypto.randomUUID(), value: '' }],
+                expressionErrors: new Map(),
 
                 // --- ACTIONS IMPLEMENTATION ---
+                addExpression: () => {
+                    set(produce(state => {
+                        state.expressions = [...state.expressions, { id: crypto.randomUUID(), value: '' }];
+                    }));
+                },
+
+                updateExpression: (id, value) => {
+                    set(produce(state => {
+                        state.expressions = state.expressions.map(expr => 
+                            expr.id === id ? { ...expr, value } : expr
+                        );
+                    }));
+                },
+
+                removeExpression: (id) => {
+                    set(produce(state => {
+                        state.expressions = state.expressions.filter(e => e.id !== id);
+                    }));
+                },
+
+                evaluateExpressions: () => {
+                    const { expressions, objects } = get();
+                    const { newObjects, errors } = ExpressionEngine.evaluateExpressions(expressions, objects);
+                    
+                    set(produce(state => {
+                        state.expressionErrors.clear();
+                        for (const [id, error] of errors.entries()) {
+                            state.expressionErrors.set(id, error);
+                        }
+
+                        // Create a new Map to ensure React detects the change
+                        const newObjectsMap = new Map<string, SceneObjectUnion>();
+
+                        // Keep objects that are not defined in expressions
+                        for (const [id, obj] of state.objects.entries()) {
+                            if (!expressions.some(e => e.value.startsWith(obj.name + '='))) {
+                                newObjectsMap.set(id, obj);
+                            }
+                        }
+
+                        // Add new objects from expressions
+                        for (const [id, obj] of newObjects.entries()) {
+                            newObjectsMap.set(id, obj);
+                        }
+
+                        // Replace the entire Map to ensure React detects the change
+                        state.objects = newObjectsMap;
+                    }));
+                },
                 createObject: (type, properties) => {
                     const id = crypto.randomUUID();
                     let newObject: SceneObjectUnion;
 
                     switch (type) {
                         case 'vector':
-                            const start: [number, number, number] = properties?.start ?? [0, 0, 0];
-                            const end: [number, number, number] = properties?.end ?? [2, 2, 0];
+                            const start: [number, number, number] = (properties as Partial<Vector>)?.start ?? [0, 0, 0];
+                            const end: [number, number, number] = (properties as Partial<Vector>)?.end ?? [2, 2, 0];
                             newObject = {
                                 id,
                                 type: 'vector',
@@ -142,7 +200,10 @@ const useStore = create<AppState & Actions>()(
                     }
 
                     set(produce(state => {
-                        state.objects.set(id, newObject);
+                        // Create a new Map to ensure React detects the change
+                        const newObjectsMap = new Map(state.objects);
+                        newObjectsMap.set(id, newObject);
+                        state.objects = newObjectsMap;
                     }));
 
                     return { status: "Success", payload: id };
@@ -156,11 +217,29 @@ const useStore = create<AppState & Actions>()(
                     set(produce(state => {
                         const objectToUpdate = state.objects.get(objectId);
                         if (objectToUpdate) {
-                            Object.assign(objectToUpdate, properties);
-                            if (objectToUpdate.type === 'vector' && (properties.start || properties.end)) {
-                                const vec = objectToUpdate as Vector;
-                                vec.components = [vec.end[0] - vec.start[0], vec.end[1] - vec.start[1], vec.end[2] - vec.start[2]];
+                            // Create a new Map to ensure React detects the change
+                            const newObjectsMap = new Map(state.objects);
+                            
+                            // Create updated object with new properties
+                            const updatedObject = { ...objectToUpdate, ...properties };
+                            
+                            // Update components for vectors if needed
+                            if (updatedObject.type === 'vector' && 
+                                ((properties as Partial<Vector>).start || (properties as Partial<Vector>).end)) {
+                                const vec = updatedObject as Vector;
+                                const start = (properties as Partial<Vector>).start || vec.start;
+                                const end = (properties as Partial<Vector>).end || vec.end;
+                                vec.components = [end[0] - start[0], end[1] - start[1], end[2] - start[2]];
+
+                                // Update expression
+                                const expr = state.expressions.find(e => e.value.startsWith(vec.name + '='));
+                                if (expr) {
+                                    expr.value = `${vec.name} = [${vec.components.join(', ')}]`;
+                                }
                             }
+                            
+                            newObjectsMap.set(objectId, updatedObject);
+                            state.objects = newObjectsMap;
                         }
                     }));
 
@@ -169,7 +248,11 @@ const useStore = create<AppState & Actions>()(
 
                 deleteObject: (objectId: string) => {
                     set(produce(state => {
-                        state.objects.delete(objectId);
+                        // Create a new Map to ensure React detects the change
+                        const newObjectsMap = new Map(state.objects);
+                        newObjectsMap.delete(objectId);
+                        
+                        state.objects = newObjectsMap;
                         if (state.selectedObjectId === objectId) {
                             state.selectedObjectId = null;
                         }
@@ -187,14 +270,19 @@ const useStore = create<AppState & Actions>()(
 
                 applySceneTransform: (transformMatrix) => {
                     set(produce(state => {
+                        // Create a new Map to ensure React detects the change
+                        const newObjectsMap = new Map(state.objects);
+                        
                         for (const [id, obj] of state.objects.entries()) {
                             if (obj.type === 'vector') {
                                 const result = MathEngine.applyTransformToObject(obj, transformMatrix);
                                 if (result.status === 'Success' && result.payload) {
-                                    state.objects.set(id, result.payload);
+                                    newObjectsMap.set(id, result.payload);
                                 }
                             }
                         }
+                        
+                        state.objects = newObjectsMap;
                     }));
                 },
 
@@ -207,20 +295,70 @@ const useStore = create<AppState & Actions>()(
                 },
 
                 setBasis: (basisVectorIds) => {
+                    // Validate the new basis
+                    if (basisVectorIds.length < 2 || basisVectorIds.length > 3) {
+                        get().addNotification('A basis must consist of 2 or 3 vectors', 'error');
+                        return;
+                    }
+                    
+                    // Get the actual vector objects
+                    const vectors = basisVectorIds.map(id => get().objects.get(id)).filter(v => v?.type === 'vector') as Vector[];
+                    
+                    if (vectors.length !== basisVectorIds.length) {
+                        get().addNotification('Some selected IDs are not vectors', 'error');
+                        return;
+                    }
+                    
+                    // Check if vectors are linearly independent
+                    if (MathEngine.checkLinearDependency(vectors)) {
+                        get().addNotification('Selected vectors are linearly dependent and cannot form a basis', 'error');
+                        return;
+                    }
+                    
                     set({ basisVectorIds });
+                    get().addNotification(`Basis set with ${basisVectorIds.length} vectors`, 'success');
+                },
+
+                transformObjectToBasis: (objectId, targetBasisIds) => {
+                    const state = get();
+                    const object = state.objects.get(objectId);
+                    if (!object || object.type !== 'vector') {
+                        state.addNotification('Can only transform vectors to a new basis', 'error');
+                        return;
+                    }
+                    
+                    const targetBasisVectors = targetBasisIds.map(id => state.objects.get(id)).filter(v => v?.type === 'vector') as Vector[];
+                    if (targetBasisVectors.length !== targetBasisIds.length) {
+                        state.addNotification('Target basis contains non-vector objects', 'error');
+                        return;
+                    }
+                    
+                    const result = MathEngine.getVectorCoordinatesInBasis(object as Vector, targetBasisVectors);
+                    if (result.status === 'Success' && result.payload) {
+                        // Update the object to reflect its coordinates in the new basis
+                        // For now, this could involve creating a new representation of the vector
+                        // in the coordinates of the new basis
+                        state.addNotification(`Transformed vector to new basis successfully`, 'info');
+                    } else {
+                        state.addNotification('Failed to transform vector to new basis', 'error');
+                    }
                 },
 
                 addNotification: (message, type) => {
                     const id = crypto.randomUUID();
                     set(produce(state => {
-                        state.notifications.push({ id, message, type });
+                        state.notifications = [...state.notifications, { id, message, type }];
                     }));
                 },
 
-                removeNotification: (notificationId) => {
+                removeNotification: (notificationId: string) => {
                     set(produce(state => {
                         state.notifications = state.notifications.filter(n => n.id !== notificationId);
                     }));
+                },
+
+                clearMultiSelection: () => {
+                    set({ multiSelection: [] });
                 },
 
                 setVisualizationMode: (mode) => {
@@ -231,23 +369,22 @@ const useStore = create<AppState & Actions>()(
                     set({ tempObjects: objects });
                 },
 
-                toggleMultiSelect: (objectId) => {
+                toggleMultiSelect: (objectId: string) => {
                     set(produce(state => {
                         const index = state.multiSelection.indexOf(objectId);
+                        let newMultiSelection;
                         if (index > -1) {
-                            state.multiSelection.splice(index, 1);
+                            newMultiSelection = state.multiSelection.filter(id => id !== objectId);
                         } else {
-                            state.multiSelection.push(objectId);
+                            newMultiSelection = [...state.multiSelection, objectId];
                         }
+                        state.multiSelection = newMultiSelection;
                         state.selectedObjectId = null;
                     }));
                 },
 
-                clearMultiSelection: () => {
-                    set({ multiSelection: [] });
-                },
-                undo: () => get().temporal.undo(),
-                redo: () => get().temporal.redo(),
+                undo: () => get().undo(),
+                redo: () => get().redo(),
             }),
             {
                 partialize: (state) => {

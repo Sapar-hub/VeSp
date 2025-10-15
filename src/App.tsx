@@ -5,25 +5,19 @@ import { InspectorPanel } from './components/ui/InspectorPanel';
 import { ViewportManager } from './components/core/ViewportManager';
 import { BasisPanel } from './components/ui/BasisPanel';
 import NotificationManager from './components/ui/NotificationManager';
+import { ExpressionInputPanel } from './components/ui/ExpressionInputPanel';
+import { ObjectInspector } from './components/ui/ObjectInspector';
 
-const App: React.FC = () => {
-    useEffect(() => {
-        URLSerializer.loadFromURL();
-        const unsubscribe = URLSerializer.subscribeToStoreChanges();
-        return () => {
-            unsubscribe();
-        };
-    }, []);
-
+function App() {
     return (
-        <div style={{ width: '100vw', height: '100vh', background: '#1a1a1a' }}>
+        <>
+            <ViewportManager />
             <Toolbar />
             <InspectorPanel />
-            <BasisPanel />
-            <ViewportManager />
-            <NotificationManager />
-        </div>
+            <ExpressionInputPanel />
+            <ObjectInspector />
+        </>
     );
-};
+}
 
 export default App;

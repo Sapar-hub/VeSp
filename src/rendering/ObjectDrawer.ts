@@ -20,7 +20,7 @@ export function drawVector(vectorData: Vector): THREE.ArrowHelper {
 
 /**
  * Visualizes the linear span of a set of vectors.
- * Creates a plane or a line based on the vectors.
+ * Creates a plane, line, or volume based on the vectors.
  */
 export function drawSpan(vectors: Vector[], isLinearlyDependent: boolean): THREE.Mesh | THREE.Line {
     if (vectors.length === 0) {
@@ -28,47 +28,91 @@ export function drawSpan(vectors: Vector[], isLinearlyDependent: boolean): THREE
     }
 
     if (vectors.length === 1) {
+        // Draw line representing span of single vector
         const v = vectors[0];
-        const dir = new THREE.Vector3().fromArray(v.components);
-        const origin = new THREE.Vector3().fromArray(v.start);
-        const points = [origin.clone().add(dir.clone().multiplyScalar(-100)), origin.clone().add(dir.clone().multiplyScalar(100))];
+        // Create line extending in both directions from the vector start
+        const dir = new THREE.Vector3(...v.components).normalize();
+        const origin = new THREE.Vector3(...v.start);
+        const start = origin.clone().add(dir.clone().multiplyScalar(-100));
+        const end = origin.clone().add(dir.clone().multiplyScalar(100));
+        
+        const points = [start, end];
         const geometry = new THREE.BufferGeometry().setFromPoints(points);
-        const material = new THREE.LineBasicMaterial({ color: isLinearlyDependent ? 0xff0000 : 0x00ff00, transparent: true, opacity: 0.5 });
+        const color = isLinearlyDependent ? 0xff0000 : 0x00ff00;
+        const material = new THREE.LineBasicMaterial({ 
+            color: color, 
+            transparent: true, 
+            opacity: 0.5,
+            linewidth: 2
+        });
         return new THREE.Line(geometry, material);
     }
 
     if (vectors.length >= 2) {
-        const v1 = new THREE.Vector3().fromArray(vectors[0].components);
-        const v2 = new THREE.Vector3().fromArray(vectors[1].components);
+        // For 2 vectors, determine if they span a line or a plane
+        const v1 = new THREE.Vector3(...vectors[0].components).normalize();
+        const v2 = new THREE.Vector3(...vectors[1].components).normalize();
         
-        const normal = new THREE.Vector3().crossVectors(v1, v2).normalize();
+        // Check if vectors are linearly dependent (parallel)
+        const cross = new THREE.Vector3().crossVectors(v1, v2);
+        const isParallel = cross.lengthSq() < 0.0001;
         
-        if (normal.lengthSq() < 0.0001) {
-             const v = vectors[0];
-             const dir = new THREE.Vector3().fromArray(v.components);
-             const origin = new THREE.Vector3().fromArray(v.start);
-             const points = [origin.clone().add(dir.clone().multiplyScalar(-100)), origin.clone().add(dir.clone().multiplyScalar(100))];
-             const geometry = new THREE.BufferGeometry().setFromPoints(points);
-             const material = new THREE.LineBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.5 }); // Dependent color
-             return new THREE.Line(geometry, material);
+        if (isParallel) {
+            // If parallel, span is still a line
+            const v = vectors[0];
+            const dir = new THREE.Vector3(...v.components).normalize();
+            const origin = new THREE.Vector3(...v.start);
+            const start = origin.clone().add(dir.clone().multiplyScalar(-100));
+            const end = origin.clone().add(dir.clone().multiplyScalar(100));
+            
+            const points = [start, end];
+            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            const material = new THREE.LineBasicMaterial({ 
+                color: 0xff0000, // Always red for dependent
+                transparent: true, 
+                opacity: 0.5,
+                linewidth: 2
+            });
+            return new THREE.Line(geometry, material);
+        } else {
+            // Two independent vectors span a plane
+            // Create a plane geometry centered at the average of the vector starts
+            const avgPoint = new THREE.Vector3(
+                (vectors[0].start[0] + vectors[1].start[0]) / 2,
+                (vectors[0].start[1] + vectors[1].start[1]) / 2,
+                (vectors[0].start[2] + vectors[1].start[2]) / 2
+            );
+            
+            // Calculate normal to the plane
+            const normal = new THREE.Vector3().crossVectors(v1, v2).normalize();
+            
+            // Create plane geometry
+            const planeGeometry = new THREE.PlaneGeometry(50, 50, 20, 20);
+            const color = isLinearlyDependent ? 0xff0000 : 0x00ff00;
+            const planeMaterial = new THREE.MeshBasicMaterial({ 
+                color: color, 
+                side: THREE.DoubleSide, 
+                transparent: true, 
+                opacity: 0.3,
+                wireframe: false
+            });
+            
+            const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
+            
+            // Orient the plane according to the normal
+            const quat = new THREE.Quaternion();
+            quat.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
+            planeMesh.quaternion.copy(quat);
+            
+            // Position at the average point
+            planeMesh.position.copy(avgPoint);
+            
+            return planeMesh;
         }
-
-        const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(normal, new THREE.Vector3().fromArray(vectors[0].start));
-        const planeGeom = new THREE.PlaneGeometry(100, 100, 10, 10);
-        const color = isLinearlyDependent ? 0xff0000 : 0x00ff00;
-        const planeMat = new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide, transparent: true, opacity: 0.3 });
-        
-        const planeMesh = new THREE.Mesh(planeGeom, planeMat);
-        
-        const coplanarPoint = new THREE.Vector3();
-        plane.coplanarPoint(coplanarPoint);
-        const focalPoint = new THREE.Vector3().addVectors(coplanarPoint, normal);
-        planeMesh.lookAt(focalPoint);
-        planeMesh.position.copy(coplanarPoint);
-
-        return planeMesh;
     }
     
+    // For more than 2 vectors, we could potentially span a 3D volume
+    // For visualization purposes, we'll focus on the first two independent vectors
     return new THREE.Mesh();
 }
 

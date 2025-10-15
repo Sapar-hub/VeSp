@@ -1,11 +1,10 @@
 import * as THREE from 'three';
-import useStore, { AppState } from '../store/mainStore';
+import useStore, { AppState, Actions, Vector } from '../store/mainStore';
 import type { StoreApi } from 'zustand';
 
-type ZustandStore = StoreApi<AppState & any>;
-
 export class InputController {
-    private store: ZustandStore;
+    private getStoreState: () => (AppState & Actions);
+    private subscribeToStore: (callback: () => void) => () => void;
     private raycaster = new THREE.Raycaster();
     private pointer = new THREE.Vector2();
     private camera: THREE.Camera | null = null;
@@ -14,8 +13,9 @@ export class InputController {
     private dragStartPoint: THREE.Vector3 | null = null;
     private newObjectId: string | null = null;
 
-    constructor(store: ZustandStore) {
-        this.store = store;
+    constructor(getStore: () => (AppState & Actions)) {
+        this.getStoreState = getStore;
+        this.subscribeToStore = (callback) => useStore.subscribe(callback);
     }
 
     public setCamera(camera: THREE.Camera) {
@@ -31,14 +31,18 @@ export class InputController {
         this.pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
     }
 
+    private getState() {
+        return this.getStoreState();
+    }
+
     public handlePointerDown(event: PointerEvent) {
         if (!this.camera || !this.scene) return;
         this.updatePointer(event);
         this.raycaster.setFromCamera(this.pointer, this.camera);
 
         const intersects = this.raycaster.intersectObjects(this.scene.children, true);
-        const { getState } = this.store;
-        const { mode, toggleMultiSelect, setSelectedObjectId, createObject } = getState();
+        const state = this.getState();
+        const { mode, toggleMultiSelect, setSelectedObjectId, createObject } = state;
 
         let clickedObject: THREE.Object3D | null = null;
         for (const intersect of intersects) {
@@ -55,7 +59,7 @@ export class InputController {
         if (clickedObject) {
             const objectId = clickedObject.userData.id;
             if ((mode === 'select' && event.shiftKey) || mode === 'changeBasis') {
-                if (getState().objects.get(objectId)?.type === 'vector' || getState().objects.get(objectId)?.type === 'point') {
+                if (this.getState().objects.get(objectId)?.type === 'vector' || this.getState().objects.get(objectId)?.type === 'point') {
                     toggleMultiSelect(objectId);
                 }
             } else {
@@ -75,9 +79,9 @@ export class InputController {
 
             if (this.dragStartPoint) {
                 const { payload: id } = createObject('vector', {
-                    start: this.dragStartPoint.toArray(),
-                    end: this.dragStartPoint.toArray(),
-                });
+                    start: this.dragStartPoint.toArray() as [number, number, number],
+                    end: this.dragStartPoint.toArray() as [number, number, number],
+                } as Partial<Vector>);
                 this.newObjectId = id;
                 setSelectedObjectId(id);
             }
@@ -94,7 +98,7 @@ export class InputController {
         this.raycaster.ray.intersectPlane(plane, currentPoint);
 
         if (currentPoint) {
-            this.store.getState().updateObject(this.newObjectId, { end: currentPoint.toArray() });
+            this.getState().updateObject(this.newObjectId, { end: currentPoint.toArray() as [number, number, number] });
         }
     }
 
@@ -103,7 +107,7 @@ export class InputController {
             this.isDragging = false;
             this.dragStartPoint = null;
             this.newObjectId = null;
-            this.store.getState().setMode('select');
+            this.getState().setMode('select');
         }
     }
 }
