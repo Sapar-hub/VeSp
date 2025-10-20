@@ -6,17 +6,25 @@ import { ViewportManager } from './components/core/ViewportManager';
 import { BasisPanel } from './components/ui/BasisPanel';
 import NotificationManager from './components/ui/NotificationManager';
 import { ExpressionInputPanel } from './components/ui/ExpressionInputPanel';
-import { ObjectInspector } from './components/ui/ObjectInspector';
 
 function App() {
+    const appStyle: React.CSSProperties = {
+        position: 'relative',
+        width: '100vw',
+        height: '100vh',
+        background: '#111',
+        overflow: 'hidden',
+    };
+
     return (
-        <>
+        <div style={appStyle}>
             <ViewportManager />
             <Toolbar />
             <InspectorPanel />
             <ExpressionInputPanel />
-            <ObjectInspector />
-        </>
+            <BasisPanel />
+            <NotificationManager />
+        </div>
     );
 }
 

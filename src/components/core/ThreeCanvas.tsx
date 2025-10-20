@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Canvas, useThree, PointerEvent } from '@react-three/fiber';
+import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Grid } from '@react-three/drei';
 import useStore, { Vector } from '../../store/mainStore';
 import * as ObjectDrawer from '../../rendering/ObjectDrawer';
@@ -91,16 +91,32 @@ export const ThreeCanvas: React.FC = () => {
         inputController.current = new InputController(useStore);
     }, []);
 
+    const canvasContainerStyle: React.CSSProperties = {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none', // Ignore clicks on the container
+    };
+
+    const canvasStyle: React.CSSProperties = {
+        background: '#111',
+        pointerEvents: 'auto', // But allow clicks on the canvas itself
+    };
+
     return (
-        <Canvas
-            camera={{ position: [5, 5, 10], fov: 60 }}
-            style={{ background: '#111' }}
-            onPointerDown={(e: PointerEvent) => inputController.current?.handlePointerDown(e)}
-            onPointerMove={(e: PointerEvent) => inputController.current?.handlePointerMove(e)}
-            onPointerUp={(e: PointerEvent) => inputController.current?.handlePointerUp(e)}
-        >
-            <Scene inputController={inputController.current} />
-            <OrbitControls makeDefault />
-        </Canvas>
+        <div style={canvasContainerStyle}>
+            <Canvas
+                camera={{ position: [5, 5, 10], fov: 60 }}
+                style={canvasStyle}
+                onPointerDown={(e: React.PointerEvent) => inputController.current?.handlePointerDown(e as any)}
+                onPointerMove={(e: React.PointerEvent) => inputController.current?.handlePointerMove(e as any)}
+                onPointerUp={(e: React.PointerEvent) => inputController.current?.handlePointerUp(e as any)}
+            >
+                <Scene inputController={inputController.current} />
+                <OrbitControls makeDefault />
+            </Canvas>
+        </div>
     );
 };

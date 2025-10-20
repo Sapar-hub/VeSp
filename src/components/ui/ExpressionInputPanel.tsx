@@ -18,20 +18,7 @@ const panelStyle: React.CSSProperties = {
     transition: 'transform 0.3s ease-in-out',
 };
 
-const expressionRowStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px',
-    padding: '0 15px',
-};
-
-const inputRowStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-};
-
-const inputStyle: React.CSSProperties = {
+const textareaStyle: React.CSSProperties = {
     flex: 1,
     padding: '8px',
     background: '#2a2a2a',
@@ -39,17 +26,16 @@ const inputStyle: React.CSSProperties = {
     borderRadius: '4px',
     color: 'white',
     fontFamily: 'monospace',
+    height: '200px',
+    resize: 'vertical',
+    margin: '0 15px',
 };
 
-const errorInputStyle: React.CSSProperties = {
-    ...inputStyle,
-    border: '1px solid #c0392b',
-};
 
 const errorTextStyle: React.CSSProperties = {
     color: '#c0392b',
     fontSize: '12px',
-    margin: 0,
+    margin: '0 15px',
 };
 
 const buttonStyle: React.CSSProperties = {
@@ -93,7 +79,7 @@ const objectItemStyle: React.CSSProperties = {
 };
 
 export const ExpressionInputPanel: React.FC = () => {
-    const { expressions, expressionErrors, objects, addExpression, updateExpression, removeExpression, evaluateExpressions } = useStore();
+    const { expressions, expressionErrors, objects, updateExpression, evaluateExpressions } = useStore(state => state);
     const [isFolded, setIsFolded] = useState(false);
 
     useEffect(() => {
@@ -103,51 +89,23 @@ export const ExpressionInputPanel: React.FC = () => {
         return () => clearTimeout(debounce);
     }, [expressions, evaluateExpressions]);
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, id: string, index: number) => {
-        if (e.key === 'Enter' && index === expressions.length - 1) {
-            addExpression();
-        }
-    };
-
     return (
         <div style={{ ...panelStyle, transform: isFolded ? 'translateX(-100%)' : 'translateX(0)' }}>
             <button style={toggleButtonStyle} onClick={() => setIsFolded(!isFolded)}>
                 {isFolded ? '>' : '<'}
             </button>
             <h3 style={{ margin: '15px', paddingBottom: '10px', borderBottom: '1px solid #444', fontSize: '16px' }}>
-                Expressions
+                Expression Script
             </h3>
-            {expressions.map((expr, index) => {
-                const error = expressionErrors.get(expr.id);
-                return (
-                    <div key={expr.id} style={expressionRowStyle}>
-                        <div style={inputRowStyle}>
-                            <input
-                                type="text"
-                                style={error ? errorInputStyle : inputStyle}
-                                value={expr.value}
-                                onChange={(e) => updateExpression(expr.id, e.target.value)}
-                                onKeyDown={(e) => handleKeyDown(e, expr.id, index)}
-                                placeholder={`Expression ${index + 1}`}
-                            />
-                            <button style={{...buttonStyle, background: '#c0392b'}} onClick={() => removeExpression(expr.id)}>
-                                X
-                            </button>
-                        </div>
-                        {error && <p style={errorTextStyle}>{error}</p>}
-                    </div>
-                );
-            })}
-            <h3 style={{ margin: '15px', paddingBottom: '10px', borderBottom: '1px solid #444', fontSize: '16px' }}>
-                Objects
-            </h3>
-            <div style={objectListStyle}>
-                {Array.from(objects.values()).map(obj => (
-                    <div key={obj.id} style={objectItemStyle}>
-                        {obj.name} = {JSON.stringify(obj.type === 'vector' ? (obj as any).components : (obj as any).values)}
-                    </div>
-                ))}
-            </div>
+            <textarea
+                style={textareaStyle}
+                value={expressions}
+                onChange={(e) => updateExpression(e.target.value)}
+                placeholder="a = [1, 2, 0]&#10;b = a * 2"
+            />
+            {Array.from(expressionErrors.entries()).map(([lineId, error]) => (
+                <p key={lineId} style={errorTextStyle}>{`Error on ${lineId}: ${error}`}</p>
+            ))}
         </div>
     );
 };

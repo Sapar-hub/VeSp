@@ -4,61 +4,75 @@ import useStore, { AppState, SceneObject, Vector, Matrix } from '../store/mainSt
 const math = create(all) as MathJsStatic;
 
 export const ExpressionEngine = {
-    evaluateExpressions: (expressions: { id: string, value: string }[], objects: Map<string, SceneObject>) => {
+    evaluate: (script: string, existingObjects: Map<string, SceneObject>) => {
         const parser = math.parser();
         const newObjects = new Map<string, SceneObject>();
         const errors = new Map<string, string>();
+        const lines = script.split('\n');
 
-        // First, define existing objects as variables in the parser
-        for (const [id, obj] of objects.entries()) {
-            if (obj.type === 'vector') {
-                parser.set(obj.name, (obj as Vector).components);
-            } else if (obj.type === 'matrix') {
-                parser.set(obj.name, (obj as Matrix).values);
+        // Pre-define existing objects in the parser scope if they are not defined in the script
+        const scriptDefinedNames = new Set(
+            lines.map(line => line.match(/^([a-zA-Z_][a-zA-Z_0-9]*)\s*=/)).filter(Boolean).map(m => m![1])
+        );
+        for (const obj of existingObjects.values()) {
+            if (!scriptDefinedNames.has(obj.name)) {
+                if (obj.type === 'vector') {
+                    parser.set(obj.name, (obj as Vector).components);
+                } else if (obj.type === 'matrix') {
+                    parser.set(obj.name, (obj as Matrix).values);
+                }
             }
         }
 
-        // Evaluate each expression
-        for (const expr of expressions) {
-            if (!expr.value.trim()) continue;
+        lines.forEach((line, index) => {
+            const lineId = `line-${index}`;
+            if (!line.trim()) return;
 
             try {
-                const result = parser.evaluate(expr.value);
+                const result = parser.evaluate(line);
+                const assignmentMatch = line.match(/^([a-zA-Z_][a-zA-Z_0-9]*)\s*=/);
 
-                // Check if the expression is an assignment
-                const assignmentMatch = expr.value.match(/^([a-zA-Z_][a-zA-Z_0-9]*)\s*=/);
                 if (assignmentMatch) {
                     const varName = assignmentMatch[1];
                     const newObject = ExpressionEngine.createSceneObjectFromResult(varName, result);
                     if (newObject) {
                         newObjects.set(newObject.id, newObject);
+                        // Update parser for subsequent lines
+                        if (newObject.type === 'vector') {
+                            parser.set(newObject.name, (newObject as Vector).components);
+                        } else if (newObject.type === 'matrix') {
+                            parser.set(newObject.name, (newObject as Matrix).values);
+                        }
                     }
                 }
             } catch (error: any) {
-                errors.set(expr.id, error.message);
+                errors.set(lineId, error.message);
             }
-        }
+        });
 
         return { newObjects, errors };
     },
 
     createSceneObjectFromResult: (name: string, result: any): SceneObject | null => {
-        const id = name; // Use the variable name as the object ID for now
-
-        if (Array.isArray(result)) {
-            if (result.length > 0 && Array.isArray(result[0])) {
-                // This is a matrix
+        // Use the object's name as its ID to prevent ID collisions
+        const id = name;
+    
+        if (Array.isArray(result) || result.isMatrix) {
+            const resultArray = result.isMatrix ? result.toArray() : result;
+    
+            if (resultArray.length > 0 && Array.isArray(resultArray[0])) {
+                // Matrix
                 return {
                     id,
                     type: 'matrix',
                     name,
                     color: '#00ff00',
                     visible: true,
-                    values: result,
+                    values: resultArray,
                 } as Matrix;
             } else {
-                // This is a vector
-                const components: [number, number, number] = [result[0] || 0, result[1] || 0, result[2] || 0];
+                // Vector
+                const components: [number, number, number] = [resultArray[0] || 0, resultArray[1] || 0, resultArray[2] || 0];
                 return {
                     id,
                     type: 'vector',
@@ -71,7 +85,7 @@ export const ExpressionEngine = {
                 } as Vector;
             }
         }
-
+    
         return null;
     },
 };

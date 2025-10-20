@@ -52,7 +52,7 @@ export interface AppState {
     visualizationMode: 'none' | 'tip-to-tail' | 'parallelogram';
     tempObjects: SceneObjectUnion[];
     notifications: Notification[];
-    expressions: { id: string, value: string }[];
+    expressions: string;
     expressionErrors: Map<string, string>;
 }
 
@@ -74,9 +74,7 @@ export interface Actions {
     setTempObjects: (objects: SceneObjectUnion[]) => void;
     toggleMultiSelect: (objectId: string) => void;
     clearMultiSelection: () => void;
-    addExpression: () => void;
-    updateExpression: (id: string, value: string) => void;
-    removeExpression: (id: string) => void;
+    updateExpression: (script: string) => void;
     evaluateExpressions: () => void;
     undo: () => void;
     redo: () => void;
@@ -100,57 +98,38 @@ const useStore = create<AppState & Actions>()(
                 visualizationMode: 'tip-to-tail',
                 tempObjects: [],
                 notifications: [],
-                expressions: [{ id: crypto.randomUUID(), value: '' }],
+                expressions: 'a = [1, 2, 0]\nb = a * 2',
                 expressionErrors: new Map(),
 
                 // --- ACTIONS IMPLEMENTATION ---
-                addExpression: () => {
-                    set(produce(state => {
-                        state.expressions = [...state.expressions, { id: crypto.randomUUID(), value: '' }];
-                    }));
-                },
-
-                updateExpression: (id, value) => {
-                    set(produce(state => {
-                        state.expressions = state.expressions.map(expr => 
-                            expr.id === id ? { ...expr, value } : expr
-                        );
-                    }));
-                },
-
-                removeExpression: (id) => {
-                    set(produce(state => {
-                        state.expressions = state.expressions.filter(e => e.id !== id);
-                    }));
+                updateExpression: (script) => {
+                    set({ expressions: script });
                 },
 
                 evaluateExpressions: () => {
                     const { expressions, objects } = get();
-                    const { newObjects, errors } = ExpressionEngine.evaluateExpressions(expressions, objects);
-                    
+                    const { newObjects, errors } = ExpressionEngine.evaluate(expressions, objects);
+                
                     set(produce(state => {
-                        state.expressionErrors.clear();
-                        for (const [id, error] of errors.entries()) {
-                            state.expressionErrors.set(id, error);
-                        }
-
-                        // Create a new Map to ensure React detects the change
+                        const expressionNames = new Set(
+                            expressions.split('\n').map(line => line.match(/^([a-zA-Z_][a-zA-Z_0-9]*)\s*=/)).filter(Boolean).map(m => m![1])
+                        );
+                
+                        // Create a new map, preserving non-expression-defined objects
                         const newObjectsMap = new Map<string, SceneObjectUnion>();
-
-                        // Keep objects that are not defined in expressions
                         for (const [id, obj] of state.objects.entries()) {
-                            if (!expressions.some(e => e.value.startsWith(obj.name + '='))) {
+                            if (!expressionNames.has(obj.name)) {
                                 newObjectsMap.set(id, obj);
                             }
                         }
-
-                        // Add new objects from expressions
+                
+                        // Add the newly evaluated objects
                         for (const [id, obj] of newObjects.entries()) {
-                            newObjectsMap.set(id, obj);
+                            newObjectsMap.set(id, obj as SceneObjectUnion);
                         }
-
-                        // Replace the entire Map to ensure React detects the change
+                
                         state.objects = newObjectsMap;
+                        state.expressionErrors = errors;
                     }));
                 },
                 createObject: (type, properties) => {
@@ -232,10 +211,6 @@ const useStore = create<AppState & Actions>()(
                                 vec.components = [end[0] - start[0], end[1] - start[1], end[2] - start[2]];
 
                                 // Update expression
-                                const expr = state.expressions.find(e => e.value.startsWith(vec.name + '='));
-                                if (expr) {
-                                    expr.value = `${vec.name} = [${vec.components.join(', ')}]`;
-                                }
                             }
                             
                             newObjectsMap.set(objectId, updatedObject);
@@ -256,7 +231,7 @@ const useStore = create<AppState & Actions>()(
                         if (state.selectedObjectId === objectId) {
                             state.selectedObjectId = null;
                         }
-                        state.multiSelection = state.multiSelection.filter(id => id !== objectId);
+                        state.multiSelection = state.multiSelection.filter((id: string) => id !== objectId);
                     }));
                 },
 
@@ -319,7 +294,7 @@ const useStore = create<AppState & Actions>()(
                     get().addNotification(`Basis set with ${basisVectorIds.length} vectors`, 'success');
                 },
 
-                transformObjectToBasis: (objectId, targetBasisIds) => {
+                transformObjectToBasis: (objectId: string, targetBasisIds: string[]) => {
                     const state = get();
                     const object = state.objects.get(objectId);
                     if (!object || object.type !== 'vector') {
@@ -327,7 +302,7 @@ const useStore = create<AppState & Actions>()(
                         return;
                     }
                     
-                    const targetBasisVectors = targetBasisIds.map(id => state.objects.get(id)).filter(v => v?.type === 'vector') as Vector[];
+                    const targetBasisVectors = targetBasisIds.map((id: string) => state.objects.get(id)).filter((v): v is Vector => v?.type === 'vector');
                     if (targetBasisVectors.length !== targetBasisIds.length) {
                         state.addNotification('Target basis contains non-vector objects', 'error');
                         return;
@@ -353,7 +328,7 @@ const useStore = create<AppState & Actions>()(
 
                 removeNotification: (notificationId: string) => {
                     set(produce(state => {
-                        state.notifications = state.notifications.filter(n => n.id !== notificationId);
+                        state.notifications = state.notifications.filter((n: { id: string; }) => n.id !== notificationId);
                     }));
                 },
 
@@ -374,7 +349,7 @@ const useStore = create<AppState & Actions>()(
                         const index = state.multiSelection.indexOf(objectId);
                         let newMultiSelection;
                         if (index > -1) {
-                            newMultiSelection = state.multiSelection.filter(id => id !== objectId);
+                            newMultiSelection = state.multiSelection.filter((id: string) => id !== objectId);
                         } else {
                             newMultiSelection = [...state.multiSelection, objectId];
                         }

@@ -1,9 +1,74 @@
 import React from 'react';
-import { Group, Arrow, Circle } from 'react-konva';
+import { Group, Arrow, Circle, Line, Text } from 'react-konva';
 import type { SceneObjectUnion, Vector, Point } from '../store/mainStore';
 import Konva from 'konva';
 
 const PIXELS_PER_UNIT = 50;
+
+export function drawGridAndAxes(
+    width: number,
+    height: number,
+    scale: number,
+    offsetX: number,
+    offsetY: number
+) {
+    const lines = [];
+    const step = PIXELS_PER_UNIT; // Grid step is constant in world units
+
+    // Create a transform to convert from screen to world coordinates
+    const transform = new Konva.Transform();
+    transform.translate(offsetX, offsetY);
+    transform.scale(scale, -scale); // Y is inverted
+    transform.invert();
+
+    const topLeft = transform.point({ x: 0, y: 0 });
+    const bottomRight = transform.point({ x: width, y: height });
+
+    // Vertical lines and labels
+    const startX = Math.floor(topLeft.x / step);
+    const endX = Math.ceil(bottomRight.x / step);
+    for (let i = startX; i <= endX; i++) {
+        const x = i * step;
+        const isAxis = i === 0;
+        lines.push(
+            <Line
+                key={`v-${i}`}
+                points={[x, topLeft.y, x, bottomRight.y]}
+                stroke={isAxis ? '#777' : '#333'}
+                strokeWidth={isAxis ? 2 / scale : 1 / scale}
+            />
+        );
+        if (!isAxis) {
+            lines.push(
+                <Text key={`vt-${i}`} x={x + 4 / scale} y={4 / scale} text={String(i)} fill="#555" fontSize={12 / scale} scaleY={-1} />
+            );
+        }
+    }
+
+    // Horizontal lines and labels
+    const startY = Math.floor(bottomRight.y / step);
+    const endY = Math.ceil(topLeft.y / step);
+    for (let i = startY; i <= endY; i++) {
+        const y = i * step;
+        const isAxis = i === 0;
+        lines.push(
+            <Line
+                key={`h-${i}`}
+                points={[topLeft.x, y, bottomRight.x, y]}
+                stroke={isAxis ? '#777' : '#333'}
+                strokeWidth={isAxis ? 2 / scale : 1 / scale}
+            />
+        );
+        if (!isAxis) {
+            lines.push(
+                <Text key={`ht-${i}`} x={4 / scale} y={y + 4 / scale} text={String(i)} fill="#555" fontSize={12 / scale} scaleY={-1} />
+            );
+        }
+    }
+
+    return lines;
+}
+
 
 export function drawSceneObject(
     obj: SceneObjectUnion,

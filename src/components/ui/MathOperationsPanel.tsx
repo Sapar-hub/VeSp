@@ -67,7 +67,7 @@ export const MathOperationsPanel: React.FC<MathOperationsPanelProps> = ({ select
                 break;
             case 'dot':
                 result = MathEngine.dotProduct(selectedObject as Vector, targetObject as Vector);
-                if (result.status === 'Success') {
+                if (result.status === 'Success' && result.payload !== null) {
                     setOperationResult(`Dot Product: ${result.payload.toFixed(3)}`);
                 }
                 break;
@@ -103,25 +103,25 @@ export const MathOperationsPanel: React.FC<MathOperationsPanelProps> = ({ select
                 break;
             case 'eigen':
                 result = MathEngine.calculateEigen(selectedObject as Matrix);
-                if (result.status === 'Success') {
+                if (result.status === 'Success' && result.payload) {
                     const { eigenvalues, eigenvectors } = result.payload;
-                    setOperationResult(`Eigenvalues: [${eigenvalues.map(v => v.toFixed(2)).join(', ')}]`);
-                    eigenvectors.forEach((vec, i) => {
-                        createObject('vector', { start: [0,0,0], end: [vec[0], vec[1], vec[2] || 0], name: `EigenVec ${i+1}` });
+                    setOperationResult(`Eigenvalues: [${eigenvalues.map((v: number) => v.toFixed(2)).join(', ')}]`);
+                    eigenvectors.forEach((vec: number[], i: number) => {
+                        createObject('vector', { start: [0,0,0], end: [vec[0], vec[1], vec[2] || 0], name: `EigenVec ${i+1}` } as Partial<Vector>);
                     });
                     addNotification('Eigenvectors created', 'success');
                 }
                 break;
             case 'kernel':
                 result = MathEngine.findKernel(selectedObject as Matrix);
-                if (result.status === 'Success') {
+                if (result.status === 'Success' && result.payload) {
                     result.payload.forEach(vec => createObject('vector', vec));
                     addNotification(`${result.payload.length} Kernel vectors created`, 'success');
                 }
                 break;
             case 'image':
                 result = MathEngine.findImage(selectedObject as Matrix);
-                if (result.status === 'Success') {
+                if (result.status === 'Success' && result.payload) {
                     result.payload.forEach(vec => createObject('vector', vec));
                     addNotification(`${result.payload.length} Image vectors created`, 'success');
                 }
