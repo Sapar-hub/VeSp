@@ -7,7 +7,7 @@ import { drawSceneObject, drawGridAndAxes } from '../../rendering/KonvaDrawer.ts
 const PIXELS_PER_UNIT = 50;
 
 export const KonvaCanvas: React.FC = () => {
-    const { objects, selectedObjectId, multiSelection, setSelectedObjectId, updateObject, mode, toggleMultiSelect } = useStore(state => state);
+    const { objects, tempObjects, selectedObjectId, multiSelection, setSelectedObjectId, updateObject, mode, toggleMultiSelect } = useStore(state => state);
     const stageRef = useRef<Konva.Stage>(null);
     const [stageState, setStageState] = useState({
         scale: 1,
@@ -117,6 +117,7 @@ export const KonvaCanvas: React.FC = () => {
                             const isSelected = selectedObjectId === obj.id || multiSelection.includes(obj.id);
                             return drawSceneObject(obj, isSelected);
                         })}
+                    {tempObjects.map(obj => drawSceneObject(obj, false, false))}
                 </Layer>
             </Stage>
         </div>

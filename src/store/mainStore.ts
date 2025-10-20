@@ -80,6 +80,24 @@ export interface Actions {
     redo: () => void;
 }
 
+const updateExpressionsWithScene = (state: AppState) => {
+    const nonExpressionObjects = Array.from(state.objects.values()).filter(obj => {
+        const isExpression = state.expressions.includes(`${obj.name} =`);
+        return !isExpression;
+    });
+
+    const newExpressions = nonExpressionObjects.map(obj => {
+        if (obj.type === 'vector') {
+            return `${obj.name} = [${obj.components.join(', ')}]`;
+        }
+        return ''; // Or handle other types
+    }).filter(Boolean);
+
+    // This is a simplified approach; a more robust solution would merge existing and new expressions.
+    state.expressions = state.expressions + '\n' + newExpressions.join('\n');
+};
+
+
 // --- ZUSTAND STORE from DevelopmentPlan.xml ---
 
 const useStore = create<AppState & Actions>()(
@@ -107,21 +125,16 @@ const useStore = create<AppState & Actions>()(
                 },
 
                 evaluateExpressions: () => {
-                    const { expressions, objects } = get();
-                    const { newObjects, errors } = ExpressionEngine.evaluate(expressions, objects);
+                    const { expressions, objects, visualizationMode } = get();
+                    const { newObjects, tempObjects, errors } = ExpressionEngine.evaluate(expressions, objects, visualizationMode);
                 
                     set(produce(state => {
                         const expressionNames = new Set(
                             expressions.split('\n').map(line => line.match(/^([a-zA-Z_][a-zA-Z_0-9]*)\s*=/)).filter(Boolean).map(m => m![1])
                         );
                 
-                        // Create a new map, preserving non-expression-defined objects
+                        // Re-evaluate all objects from the script
                         const newObjectsMap = new Map<string, SceneObjectUnion>();
-                        for (const [id, obj] of state.objects.entries()) {
-                            if (!expressionNames.has(obj.name)) {
-                                newObjectsMap.set(id, obj);
-                            }
-                        }
                 
                         // Add the newly evaluated objects
                         for (const [id, obj] of newObjects.entries()) {
@@ -129,6 +142,7 @@ const useStore = create<AppState & Actions>()(
                         }
                 
                         state.objects = newObjectsMap;
+                        state.tempObjects = tempObjects;
                         state.expressionErrors = errors;
                     }));
                 },
@@ -143,7 +157,7 @@ const useStore = create<AppState & Actions>()(
                             newObject = {
                                 id,
                                 type: 'vector',
-                                name: `Vector ${get().objects.size + 1}`,
+                                name: `v${get().objects.size + 1}`,
                                 color: '#ff0000',
                                 visible: true,
                                 start,
@@ -156,7 +170,7 @@ const useStore = create<AppState & Actions>()(
                             newObject = {
                                 id,
                                 type: 'point',
-                                name: `Point ${get().objects.size + 1}`,
+                                name: `p${get().objects.size + 1}`,
                                 color: '#0000ff',
                                 visible: true,
                                 position: [1, 1, 1],
@@ -167,7 +181,7 @@ const useStore = create<AppState & Actions>()(
                             newObject = {
                                 id,
                                 type: 'matrix',
-                                name: `Matrix ${get().objects.size + 1}`,
+                                name: `m${get().objects.size + 1}`,
                                 color: '#00ff00',
                                 visible: false,
                                 values: [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
@@ -179,10 +193,11 @@ const useStore = create<AppState & Actions>()(
                     }
 
                     set(produce(state => {
-                        // Create a new Map to ensure React detects the change
-                        const newObjectsMap = new Map(state.objects);
-                        newObjectsMap.set(id, newObject);
-                        state.objects = newObjectsMap;
+                        state.objects.set(id, newObject);
+                        if (newObject.type === 'vector') {
+                            const newExpression = `${newObject.name} = [${newObject.components.join(', ')}]`;
+                            state.expressions = state.expressions ? `${state.expressions}\n${newExpression}` : newExpression;
+                        }
                     }));
 
                     return { status: "Success", payload: id };
@@ -196,25 +211,14 @@ const useStore = create<AppState & Actions>()(
                     set(produce(state => {
                         const objectToUpdate = state.objects.get(objectId);
                         if (objectToUpdate) {
-                            // Create a new Map to ensure React detects the change
-                            const newObjectsMap = new Map(state.objects);
-                            
-                            // Create updated object with new properties
-                            const updatedObject = { ...objectToUpdate, ...properties };
-                            
-                            // Update components for vectors if needed
-                            if (updatedObject.type === 'vector' && 
-                                ((properties as Partial<Vector>).start || (properties as Partial<Vector>).end)) {
-                                const vec = updatedObject as Vector;
-                                const start = (properties as Partial<Vector>).start || vec.start;
-                                const end = (properties as Partial<Vector>).end || vec.end;
-                                vec.components = [end[0] - start[0], end[1] - start[1], end[2] - start[2]];
-
-                                // Update expression
+                            Object.assign(objectToUpdate, properties);
+                            if (objectToUpdate.type === 'vector') {
+                                const vec = objectToUpdate as Vector;
+                                if ((properties as Partial<Vector>).start || (properties as Partial<Vector>).end) {
+                                    vec.components = [vec.end[0] - vec.start[0], vec.end[1] - vec.start[1], vec.end[2] - vec.start[2]];
+                                }
+                                updateExpressionsWithScene(state);
                             }
-                            
-                            newObjectsMap.set(objectId, updatedObject);
-                            state.objects = newObjectsMap;
                         }
                     }));
 
@@ -223,15 +227,12 @@ const useStore = create<AppState & Actions>()(
 
                 deleteObject: (objectId: string) => {
                     set(produce(state => {
-                        // Create a new Map to ensure React detects the change
-                        const newObjectsMap = new Map(state.objects);
-                        newObjectsMap.delete(objectId);
-                        
-                        state.objects = newObjectsMap;
+                        state.objects.delete(objectId);
                         if (state.selectedObjectId === objectId) {
                             state.selectedObjectId = null;
                         }
                         state.multiSelection = state.multiSelection.filter((id: string) => id !== objectId);
+                        updateExpressionsWithScene(state);
                     }));
                 },
 
