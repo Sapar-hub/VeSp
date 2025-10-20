@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RequirementsAnalysis>
+
+    <Scenario id="SCN_001">
+        <Description>Пользователь создаёт новый вектор для дальнейших операций.</Description>
+        <Actor type="Student">
+            <Name>Студент или любитель математики</Name>
+        </Actor>
+        <Action>
+            <Verb>Создаёт вектор</Verb>
+            <Details>
+                <Parameter name="Dimension">2D или 3D</Parameter>
+                <Parameter name="InitialCoordinates">Начальные координаты (x, y, [z])</Parameter>
+            </Details>
+        </Action>
+        <Goal>
+            <Description>Инициализировать вектор для дальнейших операций</Description>
+            <Output>
+                <Status>VectorCreated</Status>
+                <VectorID>Уникальный идентификатор вектора</VectorID>
+                <VisualRepresentation>Графическое отображение вектора</VisualRepresentation>
+            </Output>
+        </Goal>
+    </Scenario>
+
+    <Scenario id="SCN_002">
+        <Description>Пользователь перетаскивает конец вектора для изменения его направления и длины.</Description>
+        <Actor type="Student">
+            <Name>Студент или любитель математики</Name>
+        </Actor>
+        <Action>
+            <Verb>Перетаскивает конец вектора</Verb>
+            <Details>
+                <Parameter name="VectorID">Идентификатор вектора</Parameter>
+                <Parameter name="NewCoordinates">Новые координаты конца (x, y, [z])</Parameter>
+            </Details>
+        </Action>
+        <Goal>
+            <Description>Изменить вектор в реальном времени и обновить зависимые объекты</Description>
+            <Output>
+                <Status>VectorUpdated</Status>
+                <UpdatedVector>Обновлённые координаты и длина</UpdatedVector>
+                <AutoRecalcDependents>Пересчитаны связанные операции (сумма, произведение и т.д.)</AutoRecalcDependents>
+            </Output>
+        </Goal>
+    </Scenario>
+
+    <Scenario id="SCN_003">
+        <Description>Пользователь складывает два вектора и видит результат.</Description>
+        <Actor type="Student">
+            <Name>Студент или любитель математики</Name>
+        </Actor>
+        <Action>
+            <Verb>Складывает векторы</Verb>
+            <Details>
+                <Parameter name="VectorA_ID">Идентификатор первого вектора</Parameter>
+                <Parameter name="VectorB_ID">Идентификатор второго вектора</Parameter>
+            </Details>
+        </Action>
+        <Goal>
+            <Description>Получить и визуализировать результирующий вектор</Description>
+            <Output>
+                <Status>SumCalculated</Status>
+                <ResultVector>Результирующий вектор (x, y, [z])</ResultVector>
+                <ParallelogramVisualization>Визуализация правила параллелограмма</ParallelogramVisualization>
+            </Output>
+        </Goal>
+    </Scenario>
+
+    <Scenario id="SCN_004">
+        <Description>Пользователь выбирает векторы и отображает их линейную оболочку (Span).</Description>
+        <Actor type="Student">
+            <Name>Студент или любитель математики</Name>
+        </Actor>
+        <Action>
+            <Verb>Показывает Span</Verb>
+            <Details>
+                <Parameter name="VectorList">Список идентификаторов векторов</Parameter>
+            </Details>
+        </Action>
+        <Goal>
+            <Description>Визуализировать плоскость или объём, порождённый векторами</Description>
+            <Output>
+                <Status>SpanVisualized</Status>
+                <SpanPlaneMesh>Плоскость или объём Span</SpanPlaneMesh>
+                <GridOverlay>Сетка внутри Span</GridOverlay>
+                <ColorCoding>Цветовая индикация линейной зависимости</ColorCoding>
+            </Output>
+        </Goal>
+    </Scenario>
+
+    <Scenario id="SCN_005">
+        <Description>Пользователь применяет матрицу к пространству и наблюдает искривление.</Description>
+        <Actor type="Student">
+            <Name>Студент или любитель математики</Name>
+        </Actor>
+        <Action>
+            <Verb>Применяет матрицу</Verb>
+            <Details>
+                <Parameter name="MatrixValues">Значения матрицы (2x2 или 3x3)</Parameter>
+                <Parameter name="ApplyToGrid">Применить к фоновой сетке (true/false)</Parameter>
+            </Details>
+        </Action>
+        <Goal>
+            <Description>Наблюдать геометрический эффект линейного преобразования</Description>
+            <Output>
+                <Status>TransformationApplied</Status>
+                <TransformedGrid>Искривлённая сетка пространства</TransformedGrid>
+                <TransformedVectors>Обновлённые векторы</TransformedVectors>
+                <DeterminantValue>Значение определителя с цветовой индикацией</DeterminantValue>
+            </Output>
+        </Goal>
+    </Scenario>
+
+    <Scenario id="SCN_006">
+        <Description>Пользователь находит и визуализирует собственные векторы матрицы.</Description>
+        <Actor type="Student">
+            <Name>Студент или любитель математики</Name>
+        </Actor>
+        <Action>
+            <Verb>Находит собственные векторы</Verb>
+            <Details>
+                <Parameter name="MatrixID">Идентификатор матрицы</Parameter>
+            </Details>
+        </Action>
+        <Goal>
+            <Description>Визуализировать направления, не меняющиеся при преобразовании</Description>
+            <Output>
+                <Status>EigenvectorsFound</Status>
+                <EigenvectorsList>Список собственных векторов</EigenvectorsList>
+                <Eigenvalues>Соответствующие собственные значения</Eigenvalues>
+                <HighlightedArrows>Выделенные стрелки на графике</HighlightedArrows>
+            </Output>
+        </Goal>
+    </Scenario>
+
+    <Scenario id="SCN_007">
+        <Description>Пользователь вычисляет векторное произведение двух векторов.</Description>
+        <Actor type="Student">
+            <Name>Студент или любитель математики</Name>
+        </Actor>
+        <Action>
+            <Verb>Вычисляет векторное произведение</Verb>
+            <Details>
+                <Parameter name="VectorA_ID">Идентификатор первого вектора</Parameter>
+                <Parameter name="VectorB_ID">Идентификатор второго вектора</Parameter>
+            </Details>
+        </Action>
+        <Goal>
+            <Description>Получить ортогональный вектор и визуализацию правила правой руки</Description>
+            <Output>
+                <Status>CrossProductCalculated</Status>
+                <CrossProductVector>Результирующий вектор</CrossProductVector>
+                <OrientationHint>Подсказка правила правой руки</OrientationHint>
+                <PlaneHighlight>Подсвеченная плоскость исходных векторов</PlaneHighlight>
+            </Output>
+        </Goal>
+    </Scenario>
+
+    <Scenario id="SCN_008">
+        <Description>Пользователь переключается на новый базис и видит пересчёт координат.</Description>
+        <Actor type="Student">
+            <Name>Студент или любитель математики</Name>
+        </Actor>
+        <Action>
+            <Verb>Переключает базис</Verb>
+            <Details>
+                <Parameter name="NewBasisVectors">Список векторов нового базиса</Parameter>
+            </Details>
+        </Action>
+        <Goal>
+            <Description>Увидеть, как объекты пересчитываются в новой системе координат</Description>
+            <Output>
+                <Status>BasisChanged</Status>
+                <CoordinateTransform>Новые координаты объектов</CoordinateTransform>
+                <AxisReorientation>Переориентация осей</AxisReorientation>
+                <GridAdaptation>Адаптация сетки под новый базис</GridAdaptation>
+            </Output>
+        </Goal>
+    </Scenario>
+
+    <Scenario id="SCN_009">
+        <Description>Система генерирует контекстную подсказку при выполнении операции.</Description>
+        <Actor type="System">
+            <Name>Система</Name>
+        </Actor>
+        <Action>
+            <Verb>Генерирует подсказку</Verb>
+            <Details>
+                <Parameter name="OperationType">Тип операции (например, CrossProduct)</Parameter>
+                <Parameter name="CurrentState">Текущее состояние сцены</Parameter>
+            </Details>
+        </Action>
+        <Goal>
+            <Description>Обогатить обучение связями с реальными приложениями</Description>
+            <Output>
+                <Status>InsightDisplayed</Status>
+                <TooltipCard>Карточка с пояснением</TooltipCard>
+                <ExampleText>Текст с примером из ИИ/физики/геометрии</ExampleText>
+                <VisualCue>Визуальный акцент на связанном элементе</VisualCue>
+            </Output>
+        </Goal>
+    </Scenario>
+
+    <Scenario id="SCN_010">
+        <Description>Система сохраняет состояние сцены в URL для возможности восстановления.</Description>
+        <Actor type="System">
+            <Name>Система</Name>
+        </Actor>
+        <Action>
+            <Verb>Сохраняет состояние в URL</Verb>
+            <Details>
+                <Parameter name="SceneState">Текущее состояние (векторы, матрицы, камера, режимы)</Parameter>
+            </Details>
+        </Action>
+        <Goal>
+            <Description>Позволить пользователю делиться или возвращаться к сцене по ссылке</Description>
+            <Output>
+                <Status>StateSerialized</Status>
+                <EncodedURL>Закодированная строка параметров</EncodedURL>
+                <ShareableLink>Готовая ссылка для копирования</ShareableLink>
+            </Output>
+        </Goal>
+    </Scenario>
+
+    <Scenario id="SCN_011">
+        <Description>Пользователь создаёт точку в пространстве, которая служит опорным элементом.</Description>
+        <Actor type="Student">
+            <Name>Студент или любитель математики</Name>
+        </Actor>
+        <Action>
+            <Verb>Создаёт точку</Verb>
+            <Details>
+                <Parameter name="Coordinates">Координаты точки (x, y, [z])</Parameter>
+                <Parameter name="DimensionMode">Текущий режим (2D или 3D)</Parameter>
+            </Details>
+        </Action>
+        <Goal>
+            <Description>Инициализировать опорную точку для построения других объектов</Description>
+            <Output>
+                <Status>PointCreated</Status>
+                <PointID>Уникальный идентификатор точки</PointID>
+                <ObjectType>Point</ObjectType>
+                <RenderStyle>Dot</RenderStyle>
+                <Coordinates>Финальные координаты (x, y, z), где z=0 в 2D-режиме</Coordinates>
+            </Output>
+        </Goal>
+    </Scenario>
+
+    <Scenario id="SCN_012">
+        <Description>Пользователь создаёт вектор, начинающийся в одной точке и заканчивающийся в другой.</Description>
+        <Actor type="Student">
+            <Name>Студент или любитель математики</Name>
+        </Actor>
+        <Action>
+            <Verb>Создаёт вектор между точками</Verb>
+            <Details>
+                <Parameter name="StartPointID">Идентификатор начальной точки</Parameter>
+                <Parameter name="EndPointID">Идентификатор конечной точки</Parameter>
+            </Details>
+        </Action>
+        <Goal>
+            <Description>Создать направленный отрезок, представляющий вектор в произвольной позиции</Description>
+            <Output>
+                <Status>VectorCreated</Status>
+                <VectorID>Уникальный идентификатор вектора</VectorID>
+                <ObjectType>Vector</ObjectType>
+                <RenderStyle>Arrow_PointToPoint</RenderStyle>
+                <Components>Компоненты вектора {dx, dy, dz}, вычисленные как EndPoint - StartPoint</Components>
+                <StartPointRef>Ссылка на начальную точку</StartPointRef>
+                <EndPointRef>Ссылка на конечную точку</EndPointRef>
+            </Output>
+        </Goal>
+    </Scenario>
+
+    <Scenario id="SCN_013">
+        <Description>Пользователь взаимодействует с UI-компонентами и видит согласованный визуальный дизайн.</Description>
+        <Actor type="Student">
+            <Name>Студент или любитель математики</Name>
+        </Actor>
+        <Action>
+            <Verb>Использует UI-компоненты</Verb>
+            <Details>
+                <Parameter name="ComponentType">Тип UI-компонента (панель инструментов, инспектор и т.д.)</Parameter>
+                <Parameter name="InteractionType">Тип взаимодействия (клик, наведение и т.д.)</Parameter>
+            </Details>
+        </Action>
+        <Goal>
+            <Description>Видеть согласованный, доступный и интуитивно понятный интерфейс</Description>
+            <Output>
+                <Status>VisualConsistencyApplied</Status>
+                <VisualFeedback>Единообразные визуальные состояния элементов интерфейса</VisualFeedback>
+                <AccessibilityCompliance>Соответствие стандартам доступности (контрастность 4.5:1)</AccessibilityCompliance>
+                <VisualHierarchy>Четкая иерархия элементов для лучшего восприятия</VisualHierarchy>
+            </Output>
+        </Goal>
+    </Scenario>
+
+    <Scenario id="SCN_014">
+        <Description>Пользователь видит улучшенную панель инспектора с раздельными подкомпонентами.</Description>
+        <Actor type="Student">
+            <Name>Студент или любитель математики</Name>
+        </Actor>
+        <Action>
+            <Verb>Взаимодействует с панелью инспектора</Verb>
+            <Details>
+                <Parameter name="ObjectType">Тип выделенного объекта (вектор, матрица и т.д.)</Parameter>
+                <Parameter name="SubComponentType">Тип подкомпонента (редактор свойств, математические операции и т.д.)</Parameter>
+            </Details>
+        </Action>
+        <Goal>
+            <Description>Легко редактировать свойства объекта благодаря улучшенной структуре UI</Description>
+            <Output>
+                <Status>ImprovedUIExperience</Status>
+                <OrganizedControls>Логически сгруппированные элементы управления</OrganizedControls>
+                <MaintainedFunctionality>Все функции панели инспектора сохранены</MaintainedFunctionality>
+            </Output>
+        </Goal>
+    </Scenario>
+
+    <Scenario id="SCN_015">
+        <Description>Пользователь вводит многострочный математический скрипт в левой панели для создания или изменения объектов.</Description>
+        <Actor type="Student">
+            <Name>Студент или любитель математики</Name>
+        </Actor>
+        <Action>
+            <Verb>Вводит скрипт</Verb>
+            <Details>
+                <Parameter name="Script">Многострочный математический скрипт (например, `a = [1, 2]\nb = a * 2`)</Parameter>
+            </Details>
+        </Action>
+        <Goal>
+            <Description>Создать или изменить несколько объектов на сцене с помощью зависимых математических выражений. Панель также отображает список всех объектов.</Description>
+            <Output>
+                <Status>ObjectsCreatedOrUpdated</Status>
+                <ObjectIds>ID созданных или обновленных объектов</ObjectIds>
+                <VisualRepresentation>Графическое отображение объектов</VisualRepresentation>
+                <Errors>Сообщения об ошибках для каждой неверной строки</Errors>
+            </Output>
+        </Goal>
+    </Scenario>
+
+</RequirementsAnalysis>

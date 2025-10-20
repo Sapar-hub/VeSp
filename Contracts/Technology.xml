@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TechnologyStack>
+    <Description>
+        Технологический стек для проекта "VectorSpace". 
+        Этот документ служит "контрактом" для ИИ, определяя точные версии и назначение каждого компонента.
+    </Description>
+
+    <Frontend>
+        <Language name="TypeScript" version="5.6.2" purpose="Основной язык программирования, обеспечивающий строгую типизацию." />
+        <Framework name="React" version="18.2.0" purpose="Библиотека для построения пользовательского интерфейса.">
+            <Dependency name="@react-three/fiber" version="8.16.8" purpose="React-рендер для Three.js, основной компонент для 3D-визуализации." />
+            <Dependency name="@react-three/drei" version="9.108.3" purpose="Коллекция хелперов для @react-three/fiber, включая OrbitControls." />
+            <Dependency name="react-konva" version="19.0.0" purpose="React-обертка для Konva, используется для 2D-рендеринга." />
+        </Framework>
+        
+        <Libraries>
+            <Library name="three" version="0.166.1" purpose="Ядро для 3D-графики." />
+            <Library name="konva" version="8.4.3" purpose="Ядро для 2D-графики, используемое через react-konva." />
+            <Library name="zustand" version="4.5.4" purpose="Легковесный менеджер состояний.">
+                <Dependency name="zundo" version="2.3.0" purpose="Мидлвар для undo/redo функционала."/>
+            </Library>
+            <Library name="immer" version="10.1.3" purpose="Библиотека для работы с иммутабельными структурами данных."/>
+            <Library name="mathjs" version="12.4.2" purpose="Математическая библиотека для вычислений и парсинга выражений." />
+            <Library name="gl-matrix" version="3.4.3" purpose="Высокопроизводительная библиотека для векторных и матричных операций." />
+            <Library name="katex" version="0.16.11" purpose="Библиотека для рендеринга математических формул в формате LaTeX." />
+        </Libraries>
+
+        <Tools>
+            <Tool name="Vite" version="5.3.4" type="BuildTool" purpose="Инструмент для сборки и разработки, обеспечивающий быструю горячую перезагрузку (HMR)." />
+            <Tool name="ESLint" version="9.7.0" type="Linter" purpose="Инструмент для статического анализа кода, обеспечивающий единообразие и предотвращение ошибок." />
+        </Tools>
+    </Frontend>
+
+    <Deployment>
+        <Platform name="Vercel" purpose="Платформа для развертывания фронтенд-приложений с автоматическим CI/CD." />
+    </Deployment>
+
+</TechnologyStack>

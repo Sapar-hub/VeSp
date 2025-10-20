@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Architecture>
+
+    <Overview>
+        <Description>
+            Архитектура приложения 'VectorSpace' для интерактивной визуализации линейной алгебры. 
+            Основана на модульном подходе с использованием React и Three.js для создания гибкого и расширяемого UI и графического ядра.
+        </Description>
+    </Overview>
+
+    <TechnologyStack>
+        <Frontend>React + TypeScript</Frontend>
+        <Graphics3D>Three.js + OrbitControls</Graphics3D>
+        <Graphics2D>react-konva</Graphics2D>
+        <Math>math.js + gl-matrix</Math>
+        <StateManagement>Zustand</StateManagement>
+        <FormulaRendering>KaTeX</FormulaRendering>
+        <Serialization>URL-parameters</Serialization>
+        <Deployment>Vercel</Deployment>
+    </TechnologyStack>
+
+    <Modules>
+        <Module name="Core">
+            <Description>Ядро приложения, управляющее состоянием и бизнес-логикой.</Description>
+            <Component id="StateStore">
+                <Description>Хранилище состояния (Zustand). Содержит все данные сцены: объекты, выделение, режим работы.</Description>
+                <API>useStore(), actions.addObject(), actions.setSelected()</API>
+            </Component>
+            <Component id="HistoryManager">
+                <Description>Подсистема для управления историей действий (Undo/Redo). Будет реализована с помощью мидлвара zustand/middleware/temporal.</Description>
+                <API>history.undo(), history.redo()</API>
+            </Component>
+        </Module>
+
+        <Module name="Rendering">
+            <Description>Отвечает за всё визуальное представление. Разделено на 2D и 3D конвейеры.</Description>
+            <Component id="ViewportManager">
+                <Description>Главный React-компонент, который читает viewMode из стора и рендерит либо KonvaCanvas, либо ThreeCanvas.</Description>
+                <API>&lt;ViewportManager /&gt;</API>
+            </Component>
+            <Component id="KonvaCanvas">
+                <Description>Контейнер для 2D-сцены, управляемой react-konva. Рендерит 2D-объекты из состояния. Поддерживает масштабирование и панорамирование.</Description>
+                <API>&lt;KonvaCanvas /&gt;</API>
+            </Component>
+            <Component id="ThreeCanvas">
+                <Description>Контейнер для 3D-сцены, управляемой @react-three/fiber. Рендерит 3D-объекты из состояния.</Description>
+                <API>&lt;ThreeCanvas /&gt;</API>
+            </Component>
+            <Component id="ObjectDrawer">
+                <Description>Набор функций для создания объектов Three.js (3D). Используется внутри ThreeCanvas.</Description>
+                <API>drawVector(vectorData), drawGrid(gridOptions), drawProjectionPlane(), drawProjectedVector(vector), drawProjectionLine(start, end)</API>
+            </Component>
+            <Component id="KonvaDrawer">
+                <Description>Набор функций для создания объектов Konva (2D). Используется внутри KonvaCanvas.</Description>
+                <API>drawVector(vectorData): Konva.Group</API>
+            </Component>
+        </Module>
+
+        <Module name="UI">
+            <Description>Компоненты пользовательского интерфейса на React.</Description>
+            <Component id="Toolbar">
+                <Description>Панель инструментов с кнопками для создания объектов и выбора режимов.</Description>
+                <API>&lt;Toolbar /&gt;</API>
+            </Component>
+            <Component id="InspectorPanel">
+                <Description>Панель для отображения и редактирования свойств выбранного объекта. Содержит подкомпоненты для различных аспектов редактирования.</Description>
+                <API>&lt;InspectorPanel selectedObjectId={selectedObjectId} /&gt;</API>
+            </Component>
+            <Component id="ObjectPropertiesPanel">
+                <Description>Подкомпонент InspectorPanel для редактирования общих свойств объекта (имя, цвет, видимость).</Description>
+                <API>&lt;ObjectPropertiesPanel selectedObject={selectedObject} /&gt;</API>
+            </Component>
+            <Component id="MultiSelectionPanel">
+                <Description>Подкомпонент InspectorPanel для обработки операций с несколькими выделенными объектами.</Description>
+                <API>&lt;MultiSelectionPanel selectedObjectIds={selectedObjectIds} /&gt;</API>
+            </Component>
+            <Component id="MathOperationsPanel">
+                <Description>Подкомпонент InspectorPanel для выполнения математических операций с объектами.</Description>
+                <API>&lt;MathOperationsPanel selectedObject={selectedObject} /&gt;</API>
+            </Component>
+            <Component id="VectorPropertiesEditor">
+                <Description>Подкомпонент InspectorPanel для редактирования специфических свойств векторов.</Description>
+                <API>&lt;VectorPropertiesEditor selectedVector={selectedVector} /&gt;</API>
+            </Component>
+            <Component id="MatrixPropertiesEditor">
+                <Description>Подкомпонент InspectorPanel для редактирования специфических свойств матриц.</Description>
+                <API>&lt;MatrixPropertiesEditor selectedMatrix={selectedMatrix} /&gt;</API>
+            </Component>
+            <Component id="ExpressionInputPanel">
+                <Description>Сворачиваемая панель для ввода математических выражений и отображения списка объектов на сцене.</Description>
+                <API>&lt;ExpressionInputPanel /&gt;</API>
+            </Component>
+            <Component id="FormulaDisplay">
+                <Description>Компонент для рендеринга LaTeX-формул с помощью KaTeX.</Description>
+                <API>&lt;FormulaDisplay latexString={...} /&gt;</API>
+            </Component>
+            <Component id="ProjectionModeToggle">
+              <Description>A toggle button in the toolbar to activate or deactivate the 'Projection Explorer' mode.</Description>
+              <API>&lt;ProjectionModeToggle /&gt;</API>
+          </Component>
+            <Component id="BasisPanel"><Description>Панель для управления текущим базисом и выбора новых базисных векторов.</Description></Component>
+            <Component id="NotificationManager"><Description>Отображает глобальные уведомления об успехе или ошибках операций.</Description></Component>
+            <Component id="VisualStylingSystem">
+                <Description>Система визуального оформления, обеспечивающая единообразие UI компонентов согласно стандартам доступности и дизайна.</Description>
+                <API>useVisualStyles(), applyVisualStandards()</API>
+            </Component>
+        </Module>
+
+        <Module name="IO">
+            <Description>Обработка ввода-вывода и сохранение состояния.</Description>
+            <Component id="InputController">
+                <Description>Обрабатывает события мыши и касаний в 3D-режиме (`ThreeCanvas`). Выполняет raycasting и транслирует ввод в действия `StateStore`. В 2D-режиме обработка ввода встроена в компоненты Konva.</Description>
+                <API>handlePointerDown(), handlePointerMove()</API>
+            </Component>
+            <Component id="URLSerializer">
+                <Description>Синхронизирует состояние `StateStore` с параметрами URL для возможности поделиться сценой.</Description>
+                <API>syncStateToUrl(state), readStateFromUrl()</API>
+            </Component>
+        </Module>
+    </Modules>
+
+    <DataModels as="TypeScriptInterfaces">
+        <Model name="SceneObject">
+            <Properties>
+                <Property name="id" type="string"/>
+                <Property name="name" type="string"/>
+                <Property name="type" type="'vector' | 'point' | 'matrix'"/>
+                <Property name="color" type="string"/>
+                <Property name="visible" type="boolean"/>
+            </Properties>
+        </Model>
+        <Model name="Vector" inherits="SceneObject">
+            <Properties>
+                <Property name="start" type="[number, number, number]"/>
+                <Property name="end" type="[number, number, number]"/>
+                <Property name="components" type="[number, number, number]" description="Кешированное значение (end - start) для оптимизации вычислений и рендеринга."/>
+            </Properties>
+        </Model>
+        <Model name="Matrix" inherits="SceneObject">
+            <Properties>
+                <Property name="values" type="number[][]"/>
+            </Properties>
+        </Model>
+        <Model name="Point" inherits="SceneObject">
+            <Properties>
+                <Property name="position" type="[number, number, number]"/>
+            </Properties>
+        </Model>
+        <Model name="AppState">
+            <Description>Главный объект состояния в Zustand.</Description>
+            <Properties>
+                <Property name="objects" type="Map&lt;string, SceneObject&gt;"/>
+                <Property name="selectedObjectId" type="string | null"/>
+                <Property name="multiSelection" type="string[]" description="IDs of multiple selected objects"/>
+                <Property name="mode" type="'select' | 'addVector' | 'transform' | 'changeBasis'"/>
+                <Property name="isProjectionExplorerActive" type="boolean"/>
+                <Property name="viewMode" type="'2d' | '3d'" defaultValue="'2d'"/>
+                <Property name="basisVectorIds" type="string[]"/>
+                <Property name="cameraState" type="{ position, target }"/>
+                <Property name="visualizationMode" type="'none' | 'tip-to-tail' | 'parallelogram'" defaultValue="'tip-to-tail'"/>
+                <Property name="tempObjects" type="SceneObjectUnion[]" description="Temporary objects for visualization (e.g., ghost vectors for tip-to-tail addition)."/>
+                <Property name="expressions" type="string" description="A multi-line script of user-defined expressions."/>
+                <Property name="expressionErrors" type="Map<string, string>" description="Errors for each expression"/>
+            </Properties>
+        </Model>
+    </DataModels>
+
+    <VisualDesignStandards>
+        <ColorPalette>
+            <Color name="primary" value="#007bff" description="Primary color for active buttons"/>
+            <Color name="secondary" value="#6c757d" description="Secondary color for disabled/special buttons"/>
+            <Color name="background" value="rgba(30, 30, 30, 0.9)" description="Dark panel background"/>
+            <Color name="text" value="#e0e0e0" description="Light text color"/>
+            <Color name="error" value="#c0392b" description="Error color for delete button"/>
+            <Color name="selection" value="#007bff" description="Selection highlight with visual emphasis"/>
+        </ColorPalette>
+
+        <SpacingStandards>
+            <Spacing name="panelPadding" value="15px" description="Panel padding"/>
+            <Spacing name="sectionPadding" value="10px" description="Section padding"/>
+            <Spacing name="buttonMargins" value="4px 2px" description="Button margins"/>
+            <Spacing name="buttonPadding" value="8px 12px" description="Button padding"/>
+            <Spacing name="inputMargins" value="8px" description="Input margins"/>
+        </SpacingStandards>
+
+        <Typography>
+            <Font name="default" description="Maintain existing font sizes and weights"/>
+            <Contrast minimum="4.5:1" description="Sufficient contrast ratios for readability"/>
+            <Hierarchy description="Consistent label sizes and heading hierarchy"/>
+        </Typography>
+
+        <VisualElements>
+            <BorderRadius value="8px" description="Consistent border-radius for panels"/>
+            <Border value="1px solid rgba(255, 255, 255, 0.1)" description="Consistent border for panels"/>
+            <Backdrop value="blur(10px)" description="Consistent backdrop-filter for panels"/>
+            <ZIndex description="Maintain existing z-index values"/>
+        </VisualElements>
+
+        <Accessibility>
+            <Contrast minimum="4.5:1" description="Minimum contrast ratio for readability"/>
+            <VisualFeedback description="Consistent visual feedback for interactions"/>
+            <Responsive description="Maintain responsive positioning across screen sizes"/>
+        </Accessibility>
+    </VisualDesignStandards>
+
+</Architecture>

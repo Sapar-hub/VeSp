@@ -1,0 +1,734 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DevelopmentPlan>
+    <Description>
+        Детальный план разработки для проекта "VectorSpace".
+        Этот документ определяет структуру файлов, API компонентов и контракты методов,
+        служа точным руководством для этапа генерации кода.
+    </Description>
+
+    <!-- ============================ CORE MODULE ============================ -->
+    <Module name="Core">
+        <FilePath>src/store/mainStore.ts</FilePath>
+        <Description>Главное хранилище состояния приложения на Zustand. Управляет всеми объектами сцены, режимами и настройками.</Description>
+        <ZustandStore name="useStore">
+            <State name="AppState" type="from_architecture.xml" />
+            
+            <Action name="createObject">
+                <Description>Создает новый объект (вектор, точку и т.д.) и добавляет его в сцену. При создании вектора, его свойство 'components' (end - start) автоматически вычисляется для оптимизации.</Description>
+                <Input>
+                    <Parameter name="type" type="'vector' | 'point' | 'matrix'"/>
+                    <Parameter name="properties" type="Partial<SceneObject>"/>
+                </Input>
+                <Output>
+                    <Type>object</Type>
+                    <PossibleReturns>
+                        <Return status="Success" details="Возвращает ID созданного объекта" payload="string"/>
+                        <Return status="InvalidType" details="Указан неверный тип объекта" payload="null"/>
+                    </PossibleReturns>
+                </Output>
+            </Action>
+
+            <Action name="updateObject">
+                <Description>Обновляет свойства существующего объекта. Если у вектора изменяются 'start' или 'end', его свойство 'components' автоматически пересчитывается.</Description>
+                <Input>
+                    <Parameter name="objectId" type="string"/>
+                    <Parameter name="properties" type="Partial<SceneObject>"/>
+                </Input>
+                <Output>
+                    <Type>object</Type>
+                    <PossibleReturns>
+                        <Return status="Success" details="Объект успешно обновлен" />
+                        <Return status="NotFound" details="Объект с таким ID не найден" />
+                    </PossibleReturns>
+                </Output>
+            </Action>
+
+            <Action name="deleteObject">
+                <Description>Удаляет объект со сцены по его ID.</Description>
+                <Input>
+                    <Parameter name="objectId" type="string"/>
+                </Input>
+                <Output>
+                    <Type>void</Type>
+                </Output>
+            </Action>
+
+            <Action name="setSelectedObjectId">
+                <Description>Устанавливает или сбрасывает выделенный объект.</Description>
+                <Input>
+                    <Parameter name="objectId" type="string | null"/>
+                </Input>
+                <Output>
+                    <Type>void</Type>
+                </Output>
+            </Action>
+
+            <Action name="setMode">
+                <Description>Изменяет текущий режим работы интерфейса.</Description>
+                <Input>
+                    <Parameter name="mode" type="'select' | 'addVector' | 'transform'"/>
+                </Input>
+                <Output>
+                    <Type>void</Type>
+                </Output>
+            </Action>
+
+            <Action name="applySceneTransform">
+                <Description>Применяет матричное преобразование ко всем соответствующим объектам сцены (векторам, точкам).</Description>
+                <Input>
+                    <Parameter name="matrix" type="Matrix"/>
+                </Input>
+                <Output>
+                    <Type>void</Type>
+                </Output>
+            </Action>
+
+            <Action name="toggleProjectionExplorer">
+                <Description>Flips the boolean value of isProjectionExplorerActive.</Description>
+            </Action>
+
+            <Action name="setViewMode">
+                <Description>Устанавливает режим отображения (2D или 3D).</Description>
+                <Input>
+                    <Parameter name="mode" type="'2d' | '3d'"/>
+                </Input>
+                <Output>
+                    <Type>void</Type>
+                </Output>
+            </Action>
+
+            <Action name="undo">
+                <Description>Отменяет последнее действие. Реализуется через `zustand/middleware/temporal`.</Description>
+            </Action>
+
+            <Action name="redo">
+                <Description>Возвращает отмененное действие. Реализуется через `zustand/middleware/temporal`.</Description>
+            </Action>
+
+            <Action name="setBasis">
+                <Input>
+                    <Parameter name="basisVectorIds" type="string[]"/>
+                </Input>
+            </Action>
+
+            <Action name="addNotification">
+                <Description>Добавляет новое уведомление в список.</Description>
+                <Input>
+                    <Parameter name="message" type="string"/>
+                    <Parameter name="type" type="'success' | 'error' | 'info'"/>
+                </Input>
+            </Action>
+
+            <Action name="removeNotification">
+                <Description>Удаляет уведомление по ID.</Description>
+                <Input>
+                    <Parameter name="notificationId" type="string"/>
+                </Input>
+            </Action>
+
+            <Action name="setVisualizationMode">
+                <Description>Устанавливает режим визуализации (none, tip-to-tail, parallelogram).</Description>
+                <Input>
+                    <Parameter name="mode" type="'none' | 'tip-to-tail' | 'parallelogram'"/>
+                </Input>
+                <Output>
+                    <Type>void</Type>
+                </Output>
+            </Action>
+
+            <Action name="setTempObjects">
+                <Description>Устанавливает временные объекты для визуализации (ghost vectors).</Description>
+                <Input>
+                    <Parameter name="objects" type="SceneObjectUnion[]"/>
+                </Input>
+                <Output>
+                    <Type>void</Type>
+                </Output>
+            </Action>
+
+            <Action name="toggleMultiSelect">
+                <Description>Переключает состояние мультивыделения для объекта.</Description>
+                <Input>
+                    <Parameter name="objectId" type="string"/>
+                </Input>
+                <Output>
+                    <Type>void</Type>
+                </Output>
+            </Action>
+
+            <Action name="clearMultiSelection">
+                <Description>Очищает список мультивыделенных объектов.</Description>
+                <Output>
+                    <Type>void</Type>
+                </Output>
+            </Action>
+
+            <Action name="updateExpression">
+                <Description>Обновляет весь скрипт выражений единой строкой.</Description>
+                <Input>
+                    <Parameter name="script" type="string"/>
+                </Input>
+            </Action>
+
+            <Action name="evaluateExpressions">
+                <Description>Парсит и вычисляет многострочный скрипт выражений и обновляет объекты на сцене.</Description>
+            </Action>
+        </ZustandStore>
+    </Module>
+
+    <!-- ========================= RENDERING MODULE ========================= -->
+    <Module name="Rendering">
+        <FilePath>src/rendering/ObjectDrawer.ts</FilePath>
+        <Description>Содержит функции для отрисовки конкретных математических объектов в 3D-сцене Three.js.</Description>
+        <Function name="drawVector">
+            <Description>Создает или обновляет Three.js объект для вектора.</Description>
+            <Input>
+                <Parameter name="vectorData" type="Vector"/>
+            </Input>
+            <Output>
+                <Type>THREE.Object3D</Type>
+            </Output>
+        </Function>
+        <Function name="drawPoint">
+            <Description>Создает или обновляет Three.js объект для точки.</Description>
+            <Input>
+                <Parameter name="pointData" type="Point"/>
+            </Input>
+            <Output>
+                <Type>THREE.Object3D</Type>
+            </Output>
+        </Function>
+        <Function name="drawSpan">
+            <Description>Визуализирует линейную оболочку (Span) для набора векторов. Цвет и прозрачность зависят от их линейной зависимости.</Description>
+            <Input>
+                <Parameter name="vectors" type="Vector[]"/>
+                <Parameter name="isLinearlyDependent" type="boolean"/>
+            </Input>
+            <Output>
+                <Type>THREE.Mesh</Type>
+            </Output>
+        </Function>
+        <Function name="drawProjectionPlane">
+            <Description>Creates a large, semi-transparent THREE.Mesh for the XY plane at z=0. The mesh's `userData` is populated to identify it as the projection plane for interaction purposes (e.g., deselection).</Description>
+            <Output>
+                <Type>THREE.Mesh</Type>
+            </Output>
+        </Function>
+        <Function name="drawProjectedVector">
+            <Description>Takes a Vector object, calculates its projection onto the XY plane, and returns a THREE.ArrowHelper for the "shadow" vector. The helper's `userData` is populated with the original vector's ID to link the shadow to its source object.</Description>
+            <Input>
+                <Parameter name="vector" type="Vector"/>
+            </Input>
+            <Output>
+                <Type>THREE.ArrowHelper</Type>
+            </Output>
+        </Function>
+        <Function name="drawProjectionLine">
+            <Description>Takes two 3D points (from, to) and returns a dotted THREE.Line to connect an object point to its projection. The line's `userData` is populated to identify it as a projection visual.</Description>
+            <Input>
+                <Parameter name="from" type="[number, number, number]"/>
+                <Parameter name="to" type="[number, number, number]"/>
+            </Input>
+            <Output>
+                <Type>THREE.Line</Type>
+            </Output>
+        </Function>
+
+        <FilePath>src/rendering/KonvaDrawer.ts</FilePath>
+        <Description>Содержит функции для отрисовки математических объектов в 2D-сцене Konva.</Description>
+        <Function name="drawVector">
+            <Description>Создает или обновляет Konva.Group объект для вектора в 2D.</Description>
+            <Input>
+                <Parameter name="vectorData" type="Vector"/>
+            </Input>
+            <Output>
+                <Type>Konva.Group</Type>
+            </Output>
+        </Function>
+    </Module>
+
+    <!-- ============================ MATH MODULE ============================ -->
+    <Module name="Math">
+        <FilePath>src/math/MathEngine.ts</FilePath>
+        <Description>Ядро для выполнения математических операций с использованием gl-matrix.</Description>
+        <Service name="MathEngine">
+            <Method name="addVectors">
+                <Description>Складывает два вектора. Векторы приводятся к компонентам (end - start), затем компоненты складываются. Результирующий вектор возвращается как новый объект Vector с началом в (0,0,0).</Description>
+                <Input>
+                    <Parameter name="v1" type="Vector"/>
+                    <Parameter name="v2" type="Vector"/>
+                </Input>
+                <Output>
+                    <Type>object</Type>
+                    <PossibleReturns>
+                        <Return status="Success" details="Возвращает результирующий вектор" payload="Vector"/>
+                        <Return status="DimensionMismatch" details="Векторы имеют разную размерность" payload="null"/>
+                    </PossibleReturns>
+                </Output>
+            </Method>
+            <Method name="crossProduct">
+                <Description>Вычисляет векторное произведение двух 3D векторов.</Description>
+                <Input>
+                    <Parameter name="v1" type="Vector"/>
+                    <Parameter name="v2" type="Vector"/>
+                </Input>
+                <Output>
+                    <Type>object</Type>
+                    <PossibleReturns>
+                        <Return status="Success" details="Возвращает ортогональный вектор" payload="[number, number, number]"/>
+                        <Return status="NotIn3D" details="Операция возможна только для 3D векторов" payload="null"/>
+                    </PossibleReturns>
+                </Output>
+            </Method>
+            <Method name="calculateEigen">
+                <Description>Находит собственные векторы и значения для матрицы.</Description>
+                <Input>
+                    <Parameter name="matrix" type="Matrix"/>
+                </Input>
+                <Output>
+                    <Type>object</Type>
+                    <PossibleReturns>
+                        <Return status="Success" details="Возвращает собственные векторы и значения" payload="{ eigenvectors: number[][], eigenvalues: number[] }"/>
+                        <Return status="NotSquareMatrix" details="Матрица не является квадратной" payload="null"/>
+                        <Return status="ComputationFailed" details="Вычисление не удалось" payload="null"/>
+                    </PossibleReturns>
+                </Output>
+            </Method>
+            <Method name="checkLinearDependency">
+                <Description>Проверяет набор векторов на линейную зависимость. Возвращает true, если векторы зависимы. Проверка должна выполняться путем составления матрицы из компонент векторов и вычисления ее ранга. Если ранг меньше количества векторов, они линейно зависимы.</Description>
+                <Input>
+                    <Parameter name="vectors" type="Vector[]"/>
+                </Input>
+                <Output>
+                    <Type>boolean</Type>
+                </Output>
+            </Method>
+            <Method name="applyTransformToObject">
+                <Description>Применяет матричное преобразование к одному объекту (вектору) и возвращает его новое состояние.</Description>
+                <Input>
+                    <Parameter name="object" type="Vector"/>
+                    <Parameter name="matrix" type="Matrix"/>
+                </Input>
+                <Output>
+                    <Type>object</Type>
+                    <PossibleReturns>
+                        <Return status="Success" details="Возвращает трансформированный объект Vector" payload="Vector"/>
+                        <Return status="DimensionMismatch" details="Размерность матрицы и объекта не совпадают" payload="null"/>
+                    </PossibleReturns>
+                </Output>
+            </Method>
+
+            <Method name="subtractVectors">
+                <Description>Вычитает второй вектор из первого.</Description>
+                <Input>
+                    <Parameter name="v1" type="Vector"/>
+                    <Parameter name="v2" type="Vector"/>
+                </Input>
+                <Output>
+                    <Type>object</Type>
+                    <PossibleReturns>
+                        <Return status="Success" details="Возвращает результирующий вектор" payload="Vector"/>
+                        <Return status="DimensionMismatch" details="Векторы имеют разную размерность" payload="null"/>
+                    </PossibleReturns>
+                </Output>
+            </Method>
+
+            <Method name="dotProduct">
+                <Description>Вычисляет скалярное произведение двух векторов.</Description>
+                <Input>
+                    <Parameter name="v1" type="Vector"/>
+                    <Parameter name="v2" type="Vector"/>
+                </Input>
+                <Output>
+                    <Type>object</Type>
+                    <PossibleReturns>
+                        <Return status="Success" details="Возвращает числовое значение" payload="number"/>
+                        <Return status="DimensionMismatch" details="Векторы имеют разную размерность" payload="null"/>
+                    </PossibleReturns>
+                </Output>
+            </Method>
+
+            <Method name="multiplyMatrices">
+                <Description>Умножает две матрицы.</Description>
+                <Input>
+                    <Parameter name="m1" type="Matrix"/>
+                    <Parameter name="m2" type="Matrix"/>
+                </Input>
+                <Output>
+                    <Type>object</Type>
+                    <PossibleReturns>
+                        <Return status="Success" details="Возвращает результирующую матрицу" payload="Matrix"/>
+                        <Return status="DimensionMismatch" details="Матрицы несовместимы для умножения" payload="null"/>
+                    </PossibleReturns>
+                </Output>
+            </Method>
+
+            <Method name="invertMatrix">
+                <Description>Находит обратную матрицу.</Description>
+                <Input>
+                    <Parameter name="m" type="Matrix"/>
+                </Input>
+                <Output>
+                    <Type>object</Type>
+                    <PossibleReturns>
+                        <Return status="Success" details="Возвращает обратную матрицу" payload="Matrix"/>
+                        <Return status="NotSquare" details="Матрица не является квадратной" payload="null"/>
+                        <Return status="Singular" details="Матрица является вырожденной (определитель равен 0)" payload="null"/>
+                    </PossibleReturns>
+                </Output>
+            </Method>
+
+            <Method name="getVectorCoordinatesInBasis">
+                <Description>Находит координаты вектора в новом базисе.</Description>
+                <Input>
+                    <Parameter name="vector" type="Vector"/>
+                    <Parameter name="basis" type="Vector[]"/>
+                </Input>
+                <Output>
+                    <Type>object</Type>
+                    <PossibleReturns>
+                        <Return status="Success" details="Возвращает массив координат" payload="number[]"/>
+                        <Return status="InvalidBasis" details="Векторы базиса линейно зависимы или их количество не соответствует размерности пространства" payload="null"/>
+                    </PossibleReturns>
+                </Output>
+            </Method>
+
+            <Method name="findKernel">
+                <Description>Находит базис ядра (нуль-пространства) матрицы.</Description>
+                <Input>
+                    <Parameter name="matrix" type="Matrix"/>
+                </Input>
+                <Output>
+                    <Type>object</Type>
+                    <PossibleReturns>
+                        <Return status="Success" details="Возвращает массив векторов, образующих базис ядра" payload="Vector[]"/>
+                    </PossibleReturns>
+                </Output>
+            </Method>
+
+            <Method name="findImage">
+                <Description>Находит базис образа (пространства столбцов) матрицы.</Description>
+                <Input>
+                    <Parameter name="matrix" type="Matrix"/>
+                </Input>
+                <Output>
+                    <Type>object</Type>
+                    <PossibleReturns>
+                        <Return status="Success" details="Возвращает массив векторов, образующих базис образа" payload="Vector[]"/>
+                    </PossibleReturns>
+                </Output>
+            </Method>
+
+            <Method name="findOrthogonalComplement">
+                <Description>Находит базис ортогонального дополнения к подпространству, заданному набором векторов.</Description>
+                <Input>
+                    <Parameter name="subspaceBasis" type="Vector[]"/>
+                </Input>
+                <Output>
+                    <Type>object</Type>
+                    <PossibleReturns>
+                        <Return status="Success" details="Возвращает массив векторов, образующих базис ортогонального дополнения" payload="Vector[]"/>
+                    </PossibleReturns>
+                </Output>
+            </Method>
+        </Service>
+    </Module>
+
+    <Module name="Expression">
+        <FilePath>src/math/ExpressionEngine.ts</FilePath>
+        <Description>Сервис для парсинга и вычисления математических выражений.</Description>
+        <Service name="ExpressionEngine">
+            <Method name="evaluate">
+                <Description>Вычисляет многострочный скрипт выражений и возвращает новые объекты, временные объекты для визуализации и ошибки.</Description>
+                <Input>
+                    <Parameter name="script" type="string"/>
+                    <Parameter name="existingObjects" type="Map<string, SceneObject>"/>
+                </Input>
+                <Output>
+                    <Type>object</Type>
+                    <PossibleReturns>
+                        <Return status="Success" details="Возвращает новые/обновленные объекты, временные объекты и ошибки" payload="{ newObjects: Map<string, SceneObject>, tempObjects: SceneObjectUnion[], errors: Map<string, string> }"/>
+                    </PossibleReturns>
+                </Output>
+            </Method>
+        </Service>
+    </Module>
+
+    <!-- ============================== UI MODULE ============================== -->
+    <Module name="UI">
+        <FilePath>src/components/ui/InspectorPanel.tsx</FilePath>
+        <Description>React-компонент, отображающий и позволяющий редактировать свойства выбранного объекта. Содержит подкомпоненты для различных аспектов редактирования.</Description>
+        <ReactComponent name="InspectorPanel">
+            <Logic>
+                <Description>
+                    Подписывается на `useStore`. Если `selectedObjectId` не null, 
+                    получает данные объекта из стора и отображает их в редактируемых полях.
+                    При изменении значений вызывает экшен `updateObject`.
+                    Если выбран объект типа `matrix`, панель отображает сетку полей ввода для редактирования значений. 
+                    В этой панели также должна быть кнопка "Apply Transform", которая вызывает экшен `applySceneTransform`, передавая в него текущую матрицу.
+                    Компонент использует подкомпоненты для организации логики и улучшения читаемости кода.
+                </Description>
+            </Logic>
+        </ReactComponent>
+
+        <FilePath>src/components/ui/ObjectPropertiesPanel.tsx</FilePath>
+        <Description>Подкомпонент InspectorPanel для редактирования общих свойств объекта (имя, цвет, видимость).</Description>
+        <ReactComponent name="ObjectPropertiesPanel">
+            <Props>
+                <Prop name="selectedObject" type="SceneObjectUnion"/>
+            </Props>
+            <Logic>
+                <Description>
+                    Отображает общие свойства выбранного объекта (имя, цвет, видимость) и позволяет их редактировать.
+                    При изменении свойств вызывает экшен `updateObject` из `useStore`.
+                </Description>
+            </Logic>
+        </ReactComponent>
+
+        <FilePath>src/components/ui/MultiSelectionPanel.tsx</FilePath>
+        <Description>Подкомпонент InspectorPanel для обработки операций с несколькими выделенными объектами.</Description>
+        <ReactComponent name="MultiSelectionPanel">
+            <Props>
+                <Prop name="selectedObjectIds" type="string[]"/>
+            </Props>
+            <Logic>
+                <Description>
+                    Отображает инструменты для работы с несколькими выделенными объектами.
+                    Позволяет применять изменения ко всем выделенным объектам одновременно.
+                </Description>
+            </Logic>
+        </ReactComponent>
+
+        <FilePath>src/components/ui/MathOperationsPanel.tsx</FilePath>
+        <Description>Подкомпонент InspectorPanel для выполнения математических операций с объектами.</Description>
+        <ReactComponent name="MathOperationsPanel">
+            <Props>
+                <Prop name="selectedObject" type="SceneObject | null"/>
+            </Props>
+            <Logic>
+                <Description>
+                    Предоставляет инструменты для выполнения математических операций с выбранным объектом.
+                    Включает операции, специфичные для типа объекта (векторные операции, матричные операции и т.д.).
+                </Description>
+            </Logic>
+        </ReactComponent>
+
+        <FilePath>src/components/ui/VectorPropertiesEditor.tsx</FilePath>
+        <Description>Подкомпонент InspectorPanel для редактирования специфических свойств векторов.</Description>
+        <ReactComponent name="VectorPropertiesEditor">
+            <Props>
+                <Prop name="selectedVector" type="Vector"/>
+            </Props>
+            <Logic>
+                <Description>
+                    Отображает и позволяет редактировать специфические свойства вектора (начальные и конечные координаты, компоненты).
+                    При изменении свойств вызывает экшен `updateObject` из `useStore`.
+                </Description>
+            </Logic>
+        </ReactComponent>
+
+        <FilePath>src/components/ui/MatrixPropertiesEditor.tsx</FilePath>
+        <Description>Подкомпонент InspectorPanel для редактирования специфических свойств матриц.</Description>
+        <ReactComponent name="MatrixPropertiesEditor">
+            <Props>
+                <Prop name="selectedMatrix" type="Matrix"/>
+            </Props>
+            <Logic>
+                <Description>
+                    Отображает сетку полей ввода для редактирования значений матрицы.
+                    Включает кнопку "Apply Transform", которая вызывает экшен `applySceneTransform`.
+                </Description>
+            </Logic>
+        </ReactComponent>
+
+        <FilePath>src/components/ui/ExpressionInputPanel.tsx</FilePath>
+        <Description>Панель для ввода математических выражений.</Description>
+        <ReactComponent name="ExpressionInputPanel">
+            <Logic>
+                <Description>
+                    Отображает многострочное текстовое поле (`textarea`) для ввода скрипта.
+                    При изменении текста в поле вызывает экшен `updateExpression`, передавая все содержимое как единую строку.
+                    В `useEffect` с задержкой вызывает `evaluateExpressions` для обновления сцены.
+                    Отображает список всех объектов на сцене и ошибки, связанные с вычислением скрипта.
+                    Является сворачиваемой панелью.
+                </Description>
+            </Logic>
+        </ReactComponent>
+
+        <FilePath>src/components/ui/Toolbar.tsx</FilePath>
+        <Description>Панель инструментов для создания объектов, выбора режимов и настройки визуализации.</Description>
+        <ReactComponent name="Toolbar">
+            <Logic>
+                <Description>
+                    Содержит кнопки, которые вызывают экшены `createObject` и `setMode` из `useStore`, 
+                    а также выпадающий список для выбора режима визуализации (tip-to-tail, parallelogram).
+                </Description>
+            </Logic>
+        </ReactComponent>
+
+        <FilePath>src/components/ui/ProjectionModeToggle.tsx</FilePath>
+        <Description>A toggle button to activate or deactivate the 'Projection Explorer' mode.</Description>
+        <ReactComponent name="ProjectionModeToggle">
+            <Logic>
+                <Description>
+                    Reads isProjectionExplorerActive from the useStore and calls toggleProjectionExplorer on click.
+                </Description>
+            </Logic>
+        </ReactComponent>
+
+        <FilePath>src/components/ui/ViewModeToggle.tsx</FilePath>
+        <Description>Переключатель между 2D и 3D режимами.</Description>
+        <ReactComponent name="ViewModeToggle">
+            <Logic>
+                <Description>
+                    Читает `viewMode` из `useStore` и вызывает `setViewMode` при клике.
+                </Description>
+            </Logic>
+        </ReactComponent>
+
+        <FilePath>src/components/ui/BasisPanel.tsx</FilePath>
+        <Description>Панель для управления текущим базисом и выбора новых базисных векторов.</Description>
+        <ReactComponent name="BasisPanel">
+            <Logic>
+                <Description>
+                    Активен в режиме `changeBasis`. Позволяет пользователю выбрать 2 или 3 вектора в сцене. 
+                    В панели отображаются ID выбранных векторов и кнопка "Set as New Basis", которая вызывает действие `setBasis` с ID этих векторов.
+                </Description>
+            </Logic>
+        </ReactComponent>
+
+        <FilePath>src/components/ui/NotificationManager.tsx</FilePath>
+        <Description>Отвечает за отображение глобальных уведомлений.</Description>
+        <ReactComponent name="NotificationManager">
+            <Logic>
+                <Description>
+                    Подписывается на `useStore` и отображает список уведомлений из `state.notifications`.
+                    Уведомления автоматически исчезают через несколько секунд.
+                </Description>
+            </Logic>
+        </ReactComponent>
+
+        <FilePath>src/components/core/ViewportManager.tsx</FilePath>
+        <Description>Главный компонент-контейнер, который выбирает между 2D и 3D рендерерами.</Description>
+        <ReactComponent name="ViewportManager">
+            <Logic>
+                <Description>
+                    Подписывается на `useStore`. В зависимости от `viewMode`, рендерит либо &lt;KonvaCanvas /&gt;, либо &lt;ThreeCanvas /&gt;.
+                </Description>
+            </Logic>
+        </ReactComponent>
+
+        <FilePath>src/components/core/KonvaCanvas.tsx</FilePath>
+        <Description>React-компонент, отвечающий за рендеринг 2D-сцены.</Description>
+        <ReactComponent name="KonvaCanvas">
+            <Logic>
+                <Description>
+                    Подписывается на `useStore` и рендерит объекты из состояния, используя `KonvaDrawer`.
+                    Обработка событий (клики, перетаскивания, масштабирование, панорамирование) встроена в компоненты Konva.
+                </Description>
+            </Logic>
+        </ReactComponent>
+
+        <FilePath>src/components/core/ThreeCanvas.tsx</FilePath>
+        <Description>React-компонент, отвечающий за рендеринг 3D-сцены.</Description>
+        <ReactComponent name="ThreeCanvas">
+            <Logic>
+                <Description>
+                    Подписывается на `useStore` и рендерит объекты из состояния, используя `ObjectDrawer`.
+                    Использует `InputController` для обработки ввода.
+                </Description>
+            </Logic>
+        </ReactComponent>
+    </Module>
+
+    <!-- ============================== IO MODULE ============================== -->
+    <Module name="IO">
+        <FilePath>src/io/URLSerializer.ts</FilePath>
+        <Description>Отвечает за кодирование и декодирование состояния сцены в URL.</Description>
+        <Service name="URLSerializer">
+            <Method name="serializeStateToURL">
+                <Description>Кодирует состояние `AppState` в строку для URL.</Description>
+                <Input>
+                    <Parameter name="state" type="AppState"/>
+                </Input>
+                <Output>
+                    <Type>string</Type>
+                </Output>
+            </Method>
+            <Method name="deserializeStateFromURL">
+                <Description>Читает URL и восстанавливает из него состояние `AppState`.</Description>
+                <Input/>
+                <Output>
+                    <Type>object</Type>
+                    <PossibleReturns>
+                        <Return status="Success" details="Возвращает восстановленное состояние" payload="Partial<AppState>"/>
+                        <Return status="NoStateInURL" details="В URL нет данных о состоянии" payload="null"/>
+                        <Return status="ParseError" details="Не удалось разобрать данные из URL" payload="null"/>
+                    </PossibleReturns>
+                </Output>
+            </Method>
+            <Method name="subscribeToStoreChanges">
+                <Description>Подписывается на изменения в `useStore` и обновляет URL.</Description>
+                <Output>
+                    <Type>function</Type>
+                    <PossibleReturns>
+                        <Return status="Success" details="Возвращает функцию для отписки" />
+                    </PossibleReturns>
+                </Output>
+            </Method>
+            <Method name="loadFromURL">
+                <Description>Загружает состояние из URL при запуске приложения.</Description>
+            </Method>
+        </Service>
+        
+        <FilePath>src/io/InputController.ts</FilePath>
+        <Description>Обрабатывает ввод пользователя (мышь, касания) в 3D-режиме. Активен только для `ThreeCanvas`.</Description>
+        <Class name="InputController">
+            <Constructor>
+                <Parameter name="store" type="ZustandStore"/>
+            </Constructor>
+            <Method name="setCamera">
+                <Description>Устанавливает камеру для `InputController`.</Description>
+                <Input>
+                    <Parameter name="camera" type="THREE.Camera"/>
+                </Input>
+                <Output><Type>void</Type></Output>
+            </Method>
+            <Method name="setScene">
+                <Description>Устанавливает сцену для `InputController`.</Description>
+                <Input>
+                    <Parameter name="scene" type="THREE.Scene"/>
+                </Input>
+                <Output><Type>void</Type></Output>
+            </Method>
+            <Method name="handlePointerDown">
+                <Description>
+                    Обрабатывает начало взаимодействия в 3D. Выполняет raycasting для определения объекта под курсором.
+                    - Если нажат обычный объект, он выбирается.
+                    - Если нажат "теневой" объект проекции, выбирается исходный 3D-объект, связанный через `userData`.
+                    - Если нажата плоскость проекции, выделение сбрасывается.
+                    - В остальных случаях начинает создание нового объекта в зависимости от текущего режима.
+                </Description>
+                <Input>
+                    <Parameter name="event" type="PointerEvent"/>
+                </Input>
+                <Output><Type>void</Type></Output>
+            </Method>
+            <Method name="handlePointerMove">
+                <Description>Обрабатывает перемещение в 3D: перетаскивание объекта или изменение его формы.</Description>
+                <Input>
+                    <Parameter name="event" type="PointerEvent"/>
+                </Input>
+                <Output><Type>void</Type></Output>
+            </Method>
+            <Method name="handlePointerUp">
+                <Description>Обрабатывает окончание взаимодействия в 3D: завершение перетаскивания или создания объекта.</Description>
+                <Input>
+                    <Parameter name="event" type="PointerEvent"/>
+                </Input>
+                <Output><Type>void</Type></Output>
+            </Method>
+        </Class>
+    </Module>
+
+</DevelopmentPlan>
