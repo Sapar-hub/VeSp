@@ -116,7 +116,7 @@ const useStore = create<AppState & Actions>()(
                 visualizationMode: 'tip-to-tail',
                 tempObjects: [],
                 notifications: [],
-                expressions: 'a = [1, 2, 0]\nb = a * 2',
+                expressions: 'a = [2, 0]\nb = [0, 2]\nc = a + b',
                 expressionErrors: new Map(),
 
                 // --- ACTIONS IMPLEMENTATION ---
@@ -339,6 +339,7 @@ const useStore = create<AppState & Actions>()(
 
                 setVisualizationMode: (mode) => {
                     set({ visualizationMode: mode });
+                    get().evaluateExpressions();
                 },
 
                 setTempObjects: (objects) => {

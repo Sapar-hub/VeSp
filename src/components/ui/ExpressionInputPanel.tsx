@@ -65,21 +65,8 @@ const toggleButtonStyle: React.CSSProperties = {
     justifyContent: 'center',
 };
 
-const objectListStyle: React.CSSProperties = {
-    padding: '0 15px',
-    flex: 1,
-    overflowY: 'auto',
-};
-
-const objectItemStyle: React.CSSProperties = {
-    fontFamily: 'monospace',
-    fontSize: '12px',
-    padding: '4px 0',
-    borderBottom: '1px solid #444',
-};
-
 export const ExpressionInputPanel: React.FC = () => {
-    const { expressions, expressionErrors, objects, updateExpression, evaluateExpressions } = useStore(state => state);
+    const { expressions, expressionErrors, updateExpression, evaluateExpressions } = useStore(state => state);
     const [isFolded, setIsFolded] = useState(false);
 
     useEffect(() => {
