@@ -7,31 +7,23 @@ import { MathOperationsPanel } from './MathOperationsPanel';
 import { MultiSelectionPanel } from './MultiSelectionPanel';
 import type { Vector, Matrix } from '../../store/mainStore';
 
+import { theme, commonStyles } from '../../styles/theme';
+
 const panelStyle: React.CSSProperties = {
+    ...commonStyles.panel,
     position: 'absolute',
     top: '10px',
     right: '10px',
     width: '280px',
-    padding: '15px',
-    background: 'rgba(30, 30, 30, 0.85)',
-    backdropFilter: 'blur(10px)',
-    borderRadius: '8px',
-    color: 'white',
-    zIndex: 100,
     display: 'flex',
     flexDirection: 'column',
     gap: '12px',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
 };
 
 const buttonStyle: React.CSSProperties = {
+    ...commonStyles.button,
     width: '100%',
-    padding: '8px',
-    background: '#c0392b',
-    border: '1px solid #a03020',
-    borderRadius: '4px',
-    color: 'white',
-    cursor: 'pointer',
+    background: theme.colors.error,
     marginTop: '10px',
 };
 
@@ -54,7 +46,7 @@ export const InspectorPanel: React.FC = () => {
         return (
             <div style={panelStyle}>
                 <MultiSelectionPanel selectedObjectIds={multiSelection} />
-                <button style={{...buttonStyle, background: '#6c757d'}} onClick={clearMultiSelection}>
+                <button style={{ ...buttonStyle, background: '#6c757d' }} onClick={clearMultiSelection}>
                     Clear Selection
                 </button>
             </div>

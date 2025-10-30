@@ -461,12 +461,13 @@
         <ReactComponent name="InspectorPanel">
             <Logic>
                 <Description>
-                    Подписывается на `useStore`. Если `selectedObjectId` не null, 
-                    получает данные объекта из стора и отображает их в редактируемых полях.
-                    При изменении значений вызывает экшен `updateObject`.
-                    Если выбран объект типа `matrix`, панель отображает сетку полей ввода для редактирования значений. 
-                    В этой панели также должна быть кнопка "Apply Transform", которая вызывает экшен `applySceneTransform`, передавая в него текущую матрицу.
-                    Компонент использует подкомпоненты для организации логики и улучшения читаемости кода.
+                    Подписывается на `useStore`. Является контейнером-координатором.
+                    Если `selectedObjectId` не null, определяет тип объекта и рендерит соответствующие подкомпоненты:
+                    - `ObjectPropertiesPanel` для общих свойств.
+                    - `VectorPropertiesEditor` если выбран вектор.
+                    - `MatrixPropertiesEditor` если выбрана матрица.
+                    - `MathOperationsPanel` для операций.
+                    Если выбрано несколько объектов, рендерит `MultiSelectionPanel`.
                 </Description>
             </Logic>
         </ReactComponent>

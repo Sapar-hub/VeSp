@@ -127,20 +127,20 @@ const useStore = create<AppState & Actions>()(
                 evaluateExpressions: () => {
                     const { expressions, objects, visualizationMode } = get();
                     const { newObjects, tempObjects, errors } = ExpressionEngine.evaluate(expressions, objects, visualizationMode);
-                
+
                     set(produce(state => {
-                        const expressionNames = new Set(
-                            expressions.split('\n').map(line => line.match(/^([a-zA-Z_][a-zA-Z_0-9]*)\s*=/)).filter(Boolean).map(m => m![1])
-                        );
-                
+                        // const expressionNames = new Set(
+                        //     expressions.split('\n').map(line => line.match(/^([a-zA-Z_][a-zA-Z_0-9]*)\s*=/)).filter(Boolean).map(m => m![1])
+                        // );
+
                         // Re-evaluate all objects from the script
                         const newObjectsMap = new Map<string, SceneObjectUnion>();
-                
+
                         // Add the newly evaluated objects
                         for (const [id, obj] of newObjects.entries()) {
                             newObjectsMap.set(id, obj as SceneObjectUnion);
                         }
-                
+
                         state.objects = newObjectsMap;
                         state.tempObjects = tempObjects;
                         state.expressionErrors = errors;
@@ -248,7 +248,7 @@ const useStore = create<AppState & Actions>()(
                     set(produce(state => {
                         // Create a new Map to ensure React detects the change
                         const newObjectsMap = new Map(state.objects);
-                        
+
                         for (const [id, obj] of state.objects.entries()) {
                             if (obj.type === 'vector') {
                                 const result = MathEngine.applyTransformToObject(obj, transformMatrix);
@@ -257,7 +257,7 @@ const useStore = create<AppState & Actions>()(
                                 }
                             }
                         }
-                        
+
                         state.objects = newObjectsMap;
                     }));
                 },
@@ -276,21 +276,21 @@ const useStore = create<AppState & Actions>()(
                         get().addNotification('A basis must consist of 2 or 3 vectors', 'error');
                         return;
                     }
-                    
+
                     // Get the actual vector objects
                     const vectors = basisVectorIds.map(id => get().objects.get(id)).filter(v => v?.type === 'vector') as Vector[];
-                    
+
                     if (vectors.length !== basisVectorIds.length) {
                         get().addNotification('Some selected IDs are not vectors', 'error');
                         return;
                     }
-                    
+
                     // Check if vectors are linearly independent
                     if (MathEngine.checkLinearDependency(vectors)) {
                         get().addNotification('Selected vectors are linearly dependent and cannot form a basis', 'error');
                         return;
                     }
-                    
+
                     set({ basisVectorIds });
                     get().addNotification(`Basis set with ${basisVectorIds.length} vectors`, 'success');
                 },
@@ -302,13 +302,13 @@ const useStore = create<AppState & Actions>()(
                         state.addNotification('Can only transform vectors to a new basis', 'error');
                         return;
                     }
-                    
+
                     const targetBasisVectors = targetBasisIds.map((id: string) => state.objects.get(id)).filter((v): v is Vector => v?.type === 'vector');
                     if (targetBasisVectors.length !== targetBasisIds.length) {
                         state.addNotification('Target basis contains non-vector objects', 'error');
                         return;
                     }
-                    
+
                     const result = MathEngine.getVectorCoordinatesInBasis(object as Vector, targetBasisVectors);
                     if (result.status === 'Success' && result.payload) {
                         // Update the object to reflect its coordinates in the new basis

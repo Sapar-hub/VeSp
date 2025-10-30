@@ -1,0 +1,10 @@
+/* Global styles for the Vector Space application */
+/* KaTeX CSS for mathematical expression rendering */
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.katex-error {
+  color: #c0392b; /* Error color matching the project's style */
+}

@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react';
 import { Group, Arrow, Circle, Line, Text } from 'react-konva';
 import type { SceneObjectUnion, Vector, Point } from '../store/mainStore';
 import Konva from 'konva';

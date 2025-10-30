@@ -6,36 +6,32 @@ interface MathOperationsPanelProps {
     selectedObject: SceneObjectUnion;
 }
 
+import { theme, commonStyles } from '../../styles/theme';
+
+interface MathOperationsPanelProps {
+    selectedObject: SceneObjectUnion;
+}
+
 const selectStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '6px',
-    background: '#2a2a2a',
-    border: '1px solid #555',
-    borderRadius: '4px',
-    color: 'white',
-    boxSizing: 'border-box',
+    ...commonStyles.input,
     marginBottom: '10px',
 };
 
 const buttonStyle: React.CSSProperties = {
+    ...commonStyles.button,
     width: '100%',
-    padding: '8px',
-    background: '#007bff',
-    border: '1px solid #0056b3',
-    borderRadius: '4px',
-    color: 'white',
-    cursor: 'pointer',
     marginTop: '5px',
 };
 
 const resultStyle: React.CSSProperties = {
     marginTop: '10px',
     padding: '10px',
-    background: '#2a2a2a',
+    background: 'rgba(0, 0, 0, 0.2)',
     borderRadius: '4px',
-    color: 'white',
+    color: theme.colors.text,
     fontSize: '12px',
     wordBreak: 'break-all',
+    border: `1px solid ${theme.colors.border}`,
 };
 
 export const MathOperationsPanel: React.FC<MathOperationsPanelProps> = ({ selectedObject }) => {
@@ -75,7 +71,7 @@ export const MathOperationsPanel: React.FC<MathOperationsPanelProps> = ({ select
                 result = MathEngine.crossProduct(selectedObject as Vector, targetObject as Vector);
                 if (result.status === 'Success') {
                     const crossVector = {
-                        start: [0,0,0],
+                        start: [0, 0, 0],
                         end: result.payload,
                         name: 'Cross Product'
                     };
@@ -107,7 +103,7 @@ export const MathOperationsPanel: React.FC<MathOperationsPanelProps> = ({ select
                     const { eigenvalues, eigenvectors } = result.payload;
                     setOperationResult(`Eigenvalues: [${eigenvalues.map((v: number) => v.toFixed(2)).join(', ')}]`);
                     eigenvectors.forEach((vec: number[], i: number) => {
-                        createObject('vector', { start: [0,0,0], end: [vec[0], vec[1], vec[2] || 0], name: `EigenVec ${i+1}` } as Partial<Vector>);
+                        createObject('vector', { start: [0, 0, 0], end: [vec[0], vec[1], vec[2] || 0], name: `EigenVec ${i + 1}` } as Partial<Vector>);
                     });
                     addNotification('Eigenvectors created', 'success');
                 }
@@ -172,8 +168,8 @@ export const MathOperationsPanel: React.FC<MathOperationsPanelProps> = ({ select
             {selectedObject.type === 'matrix' && renderMatrixOperations()}
             {operationResult && (
                 <div style={resultStyle}>
-                    <p style={{margin: 0}}>{operationResult}</p>
-                    <button onClick={() => setOperationResult(null)} style={{...buttonStyle, width: 'auto', padding: '4px 8px', fontSize: '10px', float: 'right'}}>Clear</button>
+                    <p style={{ margin: 0 }}>{operationResult}</p>
+                    <button onClick={() => setOperationResult(null)} style={{ ...buttonStyle, width: 'auto', padding: '4px 8px', fontSize: '10px', float: 'right' }}>Clear</button>
                 </div>
             )}
         </div>

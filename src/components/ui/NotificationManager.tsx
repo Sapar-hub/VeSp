@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import useStore, { Notification } from '../../store/mainStore';
 
+import { theme } from '../../styles/theme';
+
 const NotificationManager: React.FC = () => {
     const { notifications, removeNotification } = useStore(state => ({
         notifications: state.notifications,
@@ -39,7 +41,7 @@ const NotificationManager: React.FC = () => {
             case 'success':
                 return { ...baseStyle, background: '#28a745' };
             case 'error':
-                return { ...baseStyle, background: '#dc3545' };
+                return { ...baseStyle, background: theme.colors.error };
             case 'info':
             default:
                 return { ...baseStyle, background: '#17a2b8' };
@@ -58,7 +60,7 @@ const NotificationManager: React.FC = () => {
             {notifications.map((notification: Notification) => (
                 <div key={notification.id} style={getNotificationStyle(notification.type)}>
                     <span>{notification.message}</span>
-                    <button 
+                    <button
                         onClick={() => removeNotification(notification.id)}
                         style={{
                             background: 'none',

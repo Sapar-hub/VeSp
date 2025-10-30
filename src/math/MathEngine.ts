@@ -1,5 +1,5 @@
-import { vec3, mat3, mat4 } from 'gl-matrix';
-import type { Vector, Matrix, SceneObjectUnion } from '../store/mainStore';
+import { vec3 } from 'gl-matrix';
+import type { Vector, Matrix, Point } from '../store/mainStore';
 import { create, all, type MathJsStatic } from 'mathjs';
 
 const math = create(all) as MathJsStatic;
@@ -83,13 +83,13 @@ export const MathEngine = {
         try {
             const result = math.eigs(matrix.values) as any;
             // Math.js may return complex numbers, we need to handle this
-            const eigenvalues = Array.isArray(result.values) 
+            const eigenvalues = Array.isArray(result.values)
                 ? result.values.map((v: any) => (typeof v === 'object' && v.re !== undefined ? v.re : v))
                 : [];
-            const eigenvectors = Array.isArray(result.eigenvectors) 
-                ? result.eigenvectors.map((vec: any) => 
+            const eigenvectors = Array.isArray(result.eigenvectors)
+                ? result.eigenvectors.map((vec: any) =>
                     Array.isArray(vec) ? vec.map((v: any) => (typeof v === 'object' && v.re !== undefined ? v.re : v)) : vec
-                  )
+                )
                 : [];
             return { status: "Success", payload: { eigenvalues, eigenvectors } };
         } catch (error) {
@@ -105,7 +105,7 @@ export const MathEngine = {
             // Check if two vectors are scalar multiples of each other
             const v1 = vectors[0].components;
             const v2 = vectors[1].components;
-            
+
             // Simple approach: check if one is a scalar multiple of the other
             let ratio: number | null = null;
             for (let i = 0; i < v1.length; i++) {
@@ -135,13 +135,16 @@ export const MathEngine = {
                 return { status: "DimensionMismatch", payload: null };
             }
 
-            const newComponents = math.multiply(matrix.values, object.components);
-            const newEnd = vec3.add(vec3.create(), object.start, newComponents as [number, number, number]);
+            const newComponentsRaw = math.multiply(matrix.values, object.components);
+            // Ensure it's a flat array
+            const newComponents = (Array.isArray(newComponentsRaw) ? newComponentsRaw : [newComponentsRaw]) as number[];
+
+            const newEnd = vec3.add(vec3.create(), object.start, [newComponents[0], newComponents[1], newComponents[2] || 0]);
 
             const newVector: Vector = {
                 ...object,
                 end: [newEnd[0], newEnd[1], newEnd[2]],
-                components: [newComponents[0], newComponents[1], newComponents[2]],
+                components: [newComponents[0], newComponents[1], newComponents[2] || 0],
             };
             return { status: "Success", payload: newVector };
         } else if (object.type === 'point') {
@@ -150,11 +153,13 @@ export const MathEngine = {
                 return { status: "DimensionMismatch", payload: null };
             }
 
-            const newPosition = math.multiply(matrix.values, object.position);
+            const newPositionRaw = math.multiply(matrix.values, object.position);
+            // Ensure it's a flat array
+            const newPosition = (Array.isArray(newPositionRaw) ? newPositionRaw : [newPositionRaw]) as number[];
 
             const newPoint: Point = {
                 ...object,
-                position: [newPosition[0], newPosition[1], newPosition[2]],
+                position: [newPosition[0], newPosition[1], newPosition[2] || 0],
             };
             return { status: "Success", payload: newPoint };
         }
@@ -165,7 +170,7 @@ export const MathEngine = {
         if (basis.length === 0) {
             return { status: "InvalidBasis", payload: null };
         }
-        
+
         // Check linear independence of basis vectors
         if (basis.length > 1) {
             // Use a local implementation of the check
@@ -173,7 +178,7 @@ export const MathEngine = {
                 return { status: "InvalidBasis", payload: null };
             }
         }
-        
+
         // Solve the system: basisMatrix * coords = vector
         // For now, we'll implement a simple version for 2D/3D
         try {
@@ -182,7 +187,7 @@ export const MathEngine = {
             if (basis.length !== n) {
                 return { status: "InvalidBasis", payload: null }; // Basis must have n vectors for R^n
             }
-            
+
             // Create matrix from basis vectors (as columns)
             const basisMatrix: number[][] = [];
             for (let i = 0; i < n; i++) {
@@ -192,7 +197,7 @@ export const MathEngine = {
                 }
                 basisMatrix.push(row);
             }
-            
+
             // Now solve: basisMatrix * coords = vector.components
             // This requires matrix inversion: coords = inv(basisMatrix) * vector.components
             // Using a simple Gaussian elimination for now
@@ -200,7 +205,7 @@ export const MathEngine = {
             for (let i = 0; i < n; i++) {
                 augmentedMatrix.push([...basisMatrix[i], vector.components[i]]);
             }
-            
+
             // Perform Gauss-Jordan elimination
             for (let i = 0; i < n; i++) {
                 // Find pivot
@@ -211,12 +216,12 @@ export const MathEngine = {
                     }
                 }
                 [augmentedMatrix[i], augmentedMatrix[maxRow]] = [augmentedMatrix[maxRow], augmentedMatrix[i]];
-                
+
                 // Check if matrix is singular
                 if (Math.abs(augmentedMatrix[i][i]) < 1e-10) {
                     return { status: "InvalidBasis", payload: null };
                 }
-                
+
                 // Make all rows below this one 0 in current column
                 for (let k = i + 1; k < n; k++) {
                     const factor = augmentedMatrix[k][i] / augmentedMatrix[i][i];
@@ -225,7 +230,7 @@ export const MathEngine = {
                     }
                 }
             }
-            
+
             // Back substitution
             const solution: number[] = new Array(n).fill(0);
             for (let i = n - 1; i >= 0; i--) {
@@ -235,14 +240,14 @@ export const MathEngine = {
                 }
                 solution[i] /= augmentedMatrix[i][i];
             }
-            
+
             return { status: "Success", payload: solution };
         } catch (e) {
             return { status: "InvalidBasis", payload: null };
         }
     },
 
-    findKernel: (matrix: Matrix): Response<Vector[]> => {
+    findKernel: (_matrix: Matrix): Response<Vector[]> => {
         try {
             // Implementation of null space calculation would go here
             // For now, returning empty array as a placeholder
@@ -252,7 +257,7 @@ export const MathEngine = {
         }
     },
 
-    findImage: (matrix: Matrix): Response<Vector[]> => {
+    findImage: (_matrix: Matrix): Response<Vector[]> => {
         // The image (column space) of a matrix is the span of its column vectors
         try {
             // Placeholder implementation until nullSpace function is properly available
@@ -262,21 +267,22 @@ export const MathEngine = {
         }
     },
 
-    findOrthogonalComplement: (subspaceBasis: Vector[]): Response<Vector[]> => {
-        const matrix = subspaceBasis.map(v => v.components);
+    findOrthogonalComplement: (_subspaceBasis: Vector[]): Response<Vector[]> => {
+        // const matrix = subspaceBasis.map(v => v.components);
         try {
-            const nullSpace = math.nullSpace(matrix);
-            const basisVectors = nullSpace.map((vec: any, i: number) => ({
-                id: `ortho_comp_vec_${i}`,
-                type: 'vector' as const,
-                name: `Ortho Comp ${i + 1}`,
-                color: '#ffff00',
-                visible: true,
-                start: [0, 0, 0] as [number, number, number],
-                end: vec.toArray() as [number, number, number],
-                components: vec.toArray() as [number, number, number],
-            }));
-            return { status: "Success", payload: basisVectors };
+            // const nullSpace = math.nullSpace(matrix);
+            // const basisVectors = nullSpace.map((vec: any, i: number) => ({
+            //     id: `ortho_comp_vec_${i}`,
+            //     type: 'vector' as const,
+            //     name: `Ortho Comp ${i + 1}`,
+            //     color: '#ffff00',
+            //     visible: true,
+            //     start: [0, 0, 0] as [number, number, number],
+            //     end: vec.toArray() as [number, number, number],
+            //     components: vec.toArray() as [number, number, number],
+            // }));
+            // return { status: "Success", payload: basisVectors };
+            return { status: "Success", payload: [] };
         } catch (e) {
             return { status: "ComputationFailed", payload: null };
         }

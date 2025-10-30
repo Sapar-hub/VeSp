@@ -3,28 +3,26 @@ import useStore from '../../store/mainStore';
 import { ViewModeToggle } from './ViewModeToggle';
 import { ProjectionModeToggle } from './ProjectionModeToggle';
 
+import { theme, commonStyles } from '../../styles/theme';
+
 const toolbarStyle: React.CSSProperties = {
+    ...commonStyles.panel,
     position: 'absolute',
     top: '10px',
     left: '50%',
     transform: 'translateX(-50%)',
     padding: '4px',
-    background: 'rgba(30, 30, 30, 0.85)',
-    backdropFilter: 'blur(10px)',
-    borderRadius: '8px',
     display: 'flex',
     gap: '4px',
-    zIndex: 100,
-    border: '1px solid rgba(255, 255, 255, 0.1)',
     alignItems: 'center',
 };
 
 const buttonStyle: React.CSSProperties = {
-    padding: '8px 12px',
+    padding: theme.spacing.buttonPadding,
     border: 'none',
     borderRadius: '6px',
     background: 'transparent',
-    color: '#e0e0e0',
+    color: theme.colors.text,
     cursor: 'pointer',
     transition: 'background 0.2s, color 0.2s',
 };
@@ -32,7 +30,7 @@ const buttonStyle: React.CSSProperties = {
 const selectStyle: React.CSSProperties = {
     ...buttonStyle,
     background: '#2a2a2a',
-    border: '1px solid #555',
+    border: `1px solid ${theme.colors.secondary}`,
     paddingRight: '28px',
     appearance: 'none',
 };
@@ -67,10 +65,10 @@ export const Toolbar: React.FC = () => {
 
     return (
         <div style={toolbarStyle}>
-            <button style={buttonStyle} onMouseOver={e => e.currentTarget.style.background='#4a4a4a'} onMouseOut={e => e.currentTarget.style.background='transparent'} onClick={() => createObject('vector')}>
+            <button style={buttonStyle} onMouseOver={e => e.currentTarget.style.background = '#4a4a4a'} onMouseOut={e => e.currentTarget.style.background = 'transparent'} onClick={() => createObject('vector')}>
                 + Vector
             </button>
-            <button style={buttonStyle} onMouseOver={e => e.currentTarget.style.background='#4a4a4a'} onMouseOut={e => e.currentTarget.style.background='transparent'} onClick={() => createObject('matrix')}>
+            <button style={buttonStyle} onMouseOver={e => e.currentTarget.style.background = '#4a4a4a'} onMouseOut={e => e.currentTarget.style.background = 'transparent'} onClick={() => createObject('matrix')}>
                 + Matrix
             </button>
             <div style={separatorStyle}></div>

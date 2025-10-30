@@ -5,14 +5,14 @@ interface ObjectPropertiesPanelProps {
     selectedObject: SceneObjectUnion;
 }
 
+import { commonStyles } from '../../styles/theme';
+
+interface ObjectPropertiesPanelProps {
+    selectedObject: SceneObjectUnion;
+}
+
 const inputStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '6px',
-    background: '#2a2a2a',
-    border: '1px solid #555',
-    borderRadius: '4px',
-    color: 'white',
-    boxSizing: 'border-box',
+    ...commonStyles.input,
 };
 
 const labelStyle: React.CSSProperties = {
@@ -51,8 +51,8 @@ export const ObjectPropertiesPanel: React.FC<ObjectPropertiesPanelProps> = ({ se
                     onChange={(e) => handlePropertyChange('color', e.target.value)}
                 />
             </div>
-             <div>
-                <label style={{...labelStyle, display: 'flex', alignItems: 'center', gap: '8px'}}>
+            <div>
+                <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <input
                         type="checkbox"
                         checked={selectedObject.visible}

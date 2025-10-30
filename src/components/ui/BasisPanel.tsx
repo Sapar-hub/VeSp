@@ -2,40 +2,31 @@ import React, { useState, useEffect } from 'react';
 import useStore from '../../store/mainStore';
 import { MathEngine } from '../../math/MathEngine';
 
+import { theme, commonStyles } from '../../styles/theme';
+
 const panelStyle: React.CSSProperties = {
+    ...commonStyles.panel,
     position: 'absolute',
     bottom: '10px',
     left: '50%',
     transform: 'translateX(-50%)',
-    padding: '15px',
-    background: 'rgba(30, 30, 30, 0.85)',
-    backdropFilter: 'blur(10px)',
-    borderRadius: '8px',
-    color: 'white',
-    zIndex: 100,
-    border: '1px solid rgba(255, 255, 255, 0.1)',
     width: '350px',
     textAlign: 'center',
 };
 
 const buttonStyle: React.CSSProperties = {
-    padding: '8px 16px',
-    border: 'none',
-    borderRadius: '6px',
-    background: '#007bff',
-    color: '#ffffff',
-    cursor: 'pointer',
-    transition: 'background 0.2s',
+    ...commonStyles.button,
     marginTop: '10px',
 };
 
 const vectorItemStyle: React.CSSProperties = {
     padding: '4px',
     margin: '2px',
-    background: '#444',
+    background: 'rgba(0, 0, 0, 0.2)',
     borderRadius: '4px',
     fontSize: '12px',
-    textAlign: 'left'
+    textAlign: 'left',
+    border: `1px solid ${theme.colors.border}`,
 };
 
 export const BasisPanel: React.FC = () => {
@@ -83,7 +74,7 @@ export const BasisPanel: React.FC = () => {
                 .map(id => objects.get(id))
                 .filter(obj => obj?.type === 'vector')
                 .map(obj => obj) as any[];
-            
+
             if (vectors.length > 0) {
                 const linearDependent = MathEngine.checkLinearDependency(vectors);
                 if (linearDependent) {
@@ -107,7 +98,7 @@ export const BasisPanel: React.FC = () => {
             <p style={{ margin: '0 0 10px 0', fontSize: '13px', color: '#ccc' }}>
                 Select 2 or 3 vectors from the scene to form a new basis.
             </p>
-            
+
             <div style={{ background: '#2a2a2a', padding: '8px', borderRadius: '4px', minHeight: '60px', maxHeight: '120px', overflowY: 'auto' }}>
                 {selectedVectors.length === 0 ? (
                     <div style={{ color: '#888', fontStyle: 'italic' }}>No vectors selected</div>
@@ -122,11 +113,11 @@ export const BasisPanel: React.FC = () => {
                     })
                 )}
             </div>
-            
+
             {validityMessage && (
-                <div 
-                    style={{ 
-                        margin: '8px 0', 
+                <div
+                    style={{
+                        margin: '8px 0',
                         padding: '4px',
                         borderRadius: '4px',
                         fontSize: '12px',
@@ -136,17 +127,17 @@ export const BasisPanel: React.FC = () => {
                     {validityMessage}
                 </div>
             )}
-            
+
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
-                <button 
-                    style={{...buttonStyle, background: (selectedVectors.length < 2 || selectedVectors.length > 3 || validityMessage.includes('linearly dependent')) ? '#6c757d' : '#28a745'}}
+                <button
+                    style={{ ...buttonStyle, background: (selectedVectors.length < 2 || selectedVectors.length > 3 || validityMessage.includes('linearly dependent')) ? '#6c757d' : '#28a745' }}
                     onClick={handleSetBasis}
                     disabled={selectedVectors.length < 2 || selectedVectors.length > 3 || validityMessage.includes('linearly dependent')}
                 >
                     Set as New Basis
                 </button>
-                <button 
-                    style={{...buttonStyle, background: '#dc3545'}}
+                <button
+                    style={{ ...buttonStyle, background: '#dc3545' }}
                     onClick={handleCancel}
                 >
                     Cancel

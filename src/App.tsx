@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { URLSerializer } from './io/URLSerializer';
+// import { URLSerializer } from './io/URLSerializer';
 import { Toolbar } from './components/ui/Toolbar';
 import { InspectorPanel } from './components/ui/InspectorPanel';
 import { ViewportManager } from './components/core/ViewportManager';

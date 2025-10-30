@@ -5,14 +5,14 @@ interface VectorPropertiesEditorProps {
     selectedVector: Vector;
 }
 
+import { commonStyles } from '../../styles/theme';
+
+interface VectorPropertiesEditorProps {
+    selectedVector: Vector;
+}
+
 const inputStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '6px',
-    background: '#2a2a2a',
-    border: '1px solid #555',
-    borderRadius: '4px',
-    color: 'white',
-    boxSizing: 'border-box',
+    ...commonStyles.input,
 };
 
 const labelStyle: React.CSSProperties = {
@@ -39,20 +39,20 @@ export const VectorPropertiesEditor: React.FC<VectorPropertiesEditorProps> = ({ 
     return (
         <>
             <div style={vectorCoordGroupStyle}>
-                <label style={{...labelStyle, width: '50px'}}>Start:</label>
+                <label style={{ ...labelStyle, width: '50px' }}>Start:</label>
                 <input style={inputStyle} type="number" value={selectedVector.start[0]} onChange={e => handleVectorCoordChange('start', 0, e.target.value)} />
                 <input style={inputStyle} type="number" value={selectedVector.start[1]} onChange={e => handleVectorCoordChange('start', 1, e.target.value)} />
                 <input style={inputStyle} type="number" value={selectedVector.start[2]} onChange={e => handleVectorCoordChange('start', 2, e.target.value)} />
             </div>
             <div style={vectorCoordGroupStyle}>
-                <label style={{...labelStyle, width: '50px'}}>End:</label>
+                <label style={{ ...labelStyle, width: '50px' }}>End:</label>
                 <input style={inputStyle} type="number" value={selectedVector.end[0]} onChange={e => handleVectorCoordChange('end', 0, e.target.value)} />
                 <input style={inputStyle} type="number" value={selectedVector.end[1]} onChange={e => handleVectorCoordChange('end', 1, e.target.value)} />
                 <input style={inputStyle} type="number" value={selectedVector.end[2]} onChange={e => handleVectorCoordChange('end', 2, e.target.value)} />
             </div>
             <div style={vectorCoordGroupStyle}>
-                <label style={{...labelStyle, width: '80px'}}>Components:</label>
-                <span style={{...inputStyle, background: '#1a1a1a'}}>{selectedVector.components.map(c => c.toFixed(2)).join(', ')}</span>
+                <label style={{ ...labelStyle, width: '80px' }}>Components:</label>
+                <span style={{ ...inputStyle, background: '#1a1a1a' }}>{selectedVector.components.map(c => c.toFixed(2)).join(', ')}</span>
             </div>
         </>
     );

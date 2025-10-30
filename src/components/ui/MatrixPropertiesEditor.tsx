@@ -5,22 +5,20 @@ interface MatrixPropertiesEditorProps {
     selectedMatrix: Matrix;
 }
 
+import { commonStyles } from '../../styles/theme';
+
+interface MatrixPropertiesEditorProps {
+    selectedMatrix: Matrix;
+}
+
 const inputStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '6px',
-    background: '#2a2a2a',
-    border: '1px solid #555',
-    borderRadius: '4px',
-    color: 'white',
-    boxSizing: 'border-box',
+    ...commonStyles.input,
     textAlign: 'center',
 };
 
 const buttonStyle: React.CSSProperties = {
-    ...inputStyle,
-    background: '#007bff',
-    cursor: 'pointer',
-    borderColor: '#0056b3',
+    ...commonStyles.button,
+    width: '100%',
     marginTop: '10px',
 };
 

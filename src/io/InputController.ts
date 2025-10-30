@@ -1,10 +1,10 @@
 import * as THREE from 'three';
-import useStore, { AppState, Actions, Vector } from '../store/mainStore';
-import type { StoreApi } from 'zustand';
+import { AppState, Actions, Vector } from '../store/mainStore';
+// import type { StoreApi } from 'zustand';
 
 export class InputController {
     private getStoreState: () => (AppState & Actions);
-    private subscribeToStore: (callback: () => void) => () => void;
+    // private subscribeToStore: (callback: () => void) => () => void;
     private raycaster = new THREE.Raycaster();
     private pointer = new THREE.Vector2();
     private camera: THREE.Camera | null = null;
@@ -15,7 +15,7 @@ export class InputController {
 
     constructor(getStore: () => (AppState & Actions)) {
         this.getStoreState = getStore;
-        this.subscribeToStore = (callback) => useStore.subscribe(callback);
+        // this.subscribeToStore = (callback) => useStore.subscribe(callback);
     }
 
     public setCamera(camera: THREE.Camera) {
@@ -92,7 +92,7 @@ export class InputController {
         if (!this.isDragging || !this.dragStartPoint || !this.newObjectId || !this.camera) return;
         this.updatePointer(event);
         this.raycaster.setFromCamera(this.pointer, this.camera);
-        
+
         const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
         const currentPoint = new THREE.Vector3();
         this.raycaster.ray.intersectPlane(plane, currentPoint);
@@ -102,7 +102,7 @@ export class InputController {
         }
     }
 
-    public handlePointerUp(event: PointerEvent) {
+    public handlePointerUp(_event: PointerEvent) {
         if (this.isDragging) {
             this.isDragging = false;
             this.dragStartPoint = null;

@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Stage, Layer, Line } from 'react-konva';
+import { Stage, Layer } from 'react-konva';
 import useStore from '../../store/mainStore';
 import Konva from 'konva';
 import { drawSceneObject, drawGridAndAxes } from '../../rendering/KonvaDrawer.tsx';
@@ -110,10 +110,10 @@ export const KonvaCanvas: React.FC = () => {
                             if (obj.type === 'vector') {
                                 const isSelected = selectedObjectId === obj.id || multiSelection.includes(obj.id);
                                 const isDraggable = mode === 'select';
-                                
+
                                 return drawSceneObject(obj, isSelected, isDraggable, handleDragEnd);
                             }
-                            
+
                             const isSelected = selectedObjectId === obj.id || multiSelection.includes(obj.id);
                             return drawSceneObject(obj, isSelected);
                         })}

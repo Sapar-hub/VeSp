@@ -5,29 +5,31 @@ interface MultiSelectionPanelProps {
     selectedObjectIds: string[];
 }
 
+import { theme, commonStyles } from '../../styles/theme';
+
+interface MultiSelectionPanelProps {
+    selectedObjectIds: string[];
+}
+
 const buttonStyle: React.CSSProperties = {
+    ...commonStyles.button,
     width: '100%',
-    padding: '8px',
-    background: '#555',
-    border: '1px solid #777',
-    borderRadius: '4px',
-    color: 'white',
-    cursor: 'pointer',
+    background: theme.colors.secondary,
     marginTop: '5px',
 };
 
 const listStyle: React.CSSProperties = {
     maxHeight: '150px',
     overflowY: 'auto',
-    background: '#2a2a2a',
+    background: 'rgba(0, 0, 0, 0.2)',
     borderRadius: '4px',
     padding: '5px',
-    border: '1px solid #555',
+    border: `1px solid ${theme.colors.border}`,
 };
 
 const listItemStyle: React.CSSProperties = {
     padding: '4px 8px',
-    borderBottom: '1px solid #444',
+    borderBottom: `1px solid ${theme.colors.border}`,
     fontSize: '12px',
 };
 
@@ -58,10 +60,10 @@ export const MultiSelectionPanel: React.FC<MultiSelectionPanelProps> = ({ select
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px' }}>
-                <button style={{...buttonStyle, background: '#27ae60'}} onClick={() => handleBatchUpdate({ visible: true })}>Show All</button>
-                <button style={{...buttonStyle, background: '#f39c12'}} onClick={() => handleBatchUpdate({ visible: false })}>Hide All</button>
+                <button style={{ ...buttonStyle, background: '#27ae60' }} onClick={() => handleBatchUpdate({ visible: true })}>Show All</button>
+                <button style={{ ...buttonStyle, background: '#f39c12' }} onClick={() => handleBatchUpdate({ visible: false })}>Hide All</button>
             </div>
-            <button style={{...buttonStyle, background: '#c0392b'}} onClick={handleBatchDelete}>
+            <button style={{ ...buttonStyle, background: '#c0392b' }} onClick={handleBatchDelete}>
                 Delete Selected
             </button>
         </div>

@@ -1,4 +1,4 @@
-import { create, all, type MathJsStatic, MathNode } from 'mathjs';
+import { create, all, type MathJsStatic } from 'mathjs';
 import { SceneObject, Vector, Matrix, SceneObjectUnion } from '../store/mainStore';
 
 const math = create(all) as MathJsStatic;
@@ -79,10 +79,10 @@ export const ExpressionEngine = {
     createSceneObjectFromResult: (name: string, result: any): SceneObject | null => {
         // Use the object's name as its ID to prevent ID collisions
         const id = name;
-    
+
         if (Array.isArray(result) || (result && typeof result.toArray === 'function')) {
             const resultArray = Array.isArray(result) ? result : result.toArray();
-    
+
             if (resultArray.length > 0 && Array.isArray(resultArray[0])) {
                 // Matrix
                 return {
@@ -108,7 +108,7 @@ export const ExpressionEngine = {
                 } as Vector;
             }
         }
-    
+
         return null;
     },
 };
