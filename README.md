@@ -12,7 +12,12 @@ Vector Space is an interactive web application designed to visualize and manipul
 - **Notifications:** Real-time feedback on operations and errors.
 
 ## GRACE Methodology
-This project adheres to the **GRACE** methodology for software development, emphasizing:
+This project adheres to the **GRACE** methodology for software development, emphasizing a **Contract-First** approach. This means that architectural decisions and component interfaces are meticulously defined through formal XML contracts (specifically `Architecture.xml`, `DevelopmentPlan.xml`, and `RequirementsAnalysis.xml`) *before* implementation begins. This strategy is crucial for:
+-   **Preventing "Big Ball of Mud"**: By establishing clear boundaries and responsibilities early, we avoid an unstructured and unmanageable codebase.
+-   **Mitigating "Architectural Drift"**: The contracts serve as a single source of truth, ensuring that implementation remains aligned with the intended design and preventing deviations over time.
+-   **Formal Verification**: Adherence to these contracts provides a form of formal verification, ensuring the system's components integrate as designed and fulfill their specified roles, directly referencing principles discussed in software architecture lectures.
+
+The pillars of GRACE are:
 - **G**oal-oriented development
 - **R**eusable components
 - **A**gile practices
@@ -40,6 +45,7 @@ This project adheres to the **GRACE** methodology for software development, emph
 ### Infrastructure
 - **Docker**: For containerization of the application services.
 - **Docker Compose**: For defining and running multi-container Docker applications.
+- **GitHub Actions**: Implemented for Continuous Integration (CI) to automate testing and linting on every push.
 
 ## Getting Started
 
@@ -74,7 +80,12 @@ This project adheres to the **GRACE** methodology for software development, emph
     - Build the Docker images for the backend API and frontend.
     - Start the PostgreSQL database, backend API, and frontend services.
     - The backend API will be available at `http://localhost:3000`.
+    - Access API documentation at `http://localhost:3000/api-docs`.
+<<<<<<< HEAD
+    - The frontend will be available at `http://localhost:8080`.
+=======
     - The frontend will be available at `http://localhost:5173`.
+>>>>>>> b1965e62d0481f392bc3b7496c157a86a13ad9cb
 
 4.  **Database Migrations (First Run):**
     After the services are up and running for the first time, you'll need to apply database migrations. Open a new terminal in the project root and run:

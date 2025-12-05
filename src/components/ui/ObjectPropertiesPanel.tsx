@@ -26,7 +26,7 @@ const labelStyle: React.CSSProperties = {
 export const ObjectPropertiesPanel: React.FC<ObjectPropertiesPanelProps> = ({ selectedObject }) => {
     const { updateObject } = useStore();
 
-    const handlePropertyChange = (prop: keyof SceneObjectUnion, value: any) => {
+    const handlePropertyChange = <T extends keyof SceneObjectUnion>(prop: T, value: SceneObjectUnion[T]) => {
         updateObject(selectedObject.id, { [prop]: value });
     };
 

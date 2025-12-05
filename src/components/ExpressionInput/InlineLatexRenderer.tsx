@@ -29,11 +29,12 @@ export const InlineLatexRenderer: React.FC<InlineLatexRendererProps> = ({
     if (value !== inputValue) {
       setInputValue(value);
     }
-  }, [value]);
+  }, [value, inputValue]);
 
   // Process LaTeX expressions with debouncing
   const debouncedProcess = useRef(
-    debounce((input: string) => {
+    debounce((inputVal: unknown) => {
+      const input = inputVal as string;
       setIsProcessing(true);
       
       try {

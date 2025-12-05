@@ -1,5 +1,5 @@
 // src/components/auth/AuthContext.tsx
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { api } from '../../io/api';
 import { User, ApiResponse, AuthResponseData } from '../../types/types';
 
@@ -20,19 +20,13 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    const storedToken = localStorage.getItem('token');
+  // Initialize state lazily to avoid side effects in useEffect
+  const [user, setUser] = useState<User | null>(() => {
     const storedUser = localStorage.getItem('user');
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
-  }, []);
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
+  const [loading] = useState<boolean>(false); 
 
   const handleAuthResponse = (response: ApiResponse<AuthResponseData>) => {
     if (response.success && response.data?.token && response.data?.user) {

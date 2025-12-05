@@ -6,5 +6,10 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     exclude: [...configDefaults.exclude, 'dist/**'],
+    deps: {
+      inline: ['@prisma/client'],
+      external: ['bcryptjs']
+    },
+    setupFiles: './tests/setup.ts'
   },
 });

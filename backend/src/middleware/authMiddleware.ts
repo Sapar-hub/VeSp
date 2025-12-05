@@ -5,6 +5,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-dev-key';
 
 interface TokenPayload {
   userId: number;
+  email: string;
 }
 
 export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
@@ -19,7 +20,7 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload;
     req.user = decoded;
     next();
-  } catch (error) {
-    return res.status(403).json({ error: 'Invalid or expired token' });
-  }
+    } catch (error: unknown) {
+      res.status(401).json({ error: error instanceof Error ? error.message : 'Invalid token' });
+    }
 };

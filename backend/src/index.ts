@@ -84,9 +84,10 @@ app.post('/api/auth/register', async (req: Request, res: Response) => {
     }
     const result = await AuthService.register(email, password);
     res.status(201).json(result);
-  } catch (error: any) {
-    res.status(400).json({ error: error.message });
-  }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Registration failed';
+      res.status(400).json({ error: message });
+    }
 });
 
 /**
@@ -121,8 +122,9 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
     }
     const result = await AuthService.login(email, password);
     res.json(result);
-  } catch (error: any) {
-    res.status(401).json({ error: error.message });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Authentication failed';
+    res.status(401).json({ error: message });
   }
 });
 
@@ -142,8 +144,9 @@ app.get('/api/scenes/public', async (req: Request, res: Response) => {
   try {
     const scenes = await SceneService.getPublicScenes();
     res.json(scenes);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch scenes' });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to fetch public scenes';
+    res.status(500).json({ error: message });
   }
 });
 
@@ -164,8 +167,9 @@ app.get('/api/scenes/my', authenticateToken, async (req: Request, res: Response)
     if (!req.user) return res.sendStatus(401);
     const scenes = await SceneService.getUserScenes(req.user.userId);
     res.json(scenes);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch scenes' });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to fetch user scenes';
+    res.status(500).json({ error: message });
   }
 });
 
@@ -201,8 +205,9 @@ app.post('/api/scenes', authenticateToken, async (req: Request, res: Response) =
     const { name, sceneData, isPublic } = req.body;
     const scene = await SceneService.saveScene(req.user.userId, name, sceneData, isPublic || false);
     res.status(201).json(scene);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to save scene' });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to save scene';
+    res.status(500).json({ error: message });
   }
 });
 
@@ -223,8 +228,9 @@ app.get('/api/scenes', authenticateToken, async (req: Request, res: Response) =>
     if (!req.user) return res.sendStatus(401);
     const scenes = await SceneService.getUserScenes(req.user.userId);
     res.json(scenes);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch scenes' });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to fetch user scenes';
+    res.status(500).json({ error: message });
   }
 });
 
@@ -271,8 +277,9 @@ app.put('/api/scenes/:id', authenticateToken, async (req: Request, res: Response
 
     const updatedScene = await SceneService.updateScene(sceneId, name, sceneData);
     res.json(updatedScene);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update scene' });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to update scene';
+    res.status(500).json({ error: message });
   }
 });
 
@@ -306,8 +313,9 @@ app.delete('/api/scenes/:id', authenticateToken, async (req: Request, res: Respo
 
     await SceneService.deleteScene(sceneId);
     res.json({ message: 'Scene deleted' });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to delete scene' });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to delete scene';
+    res.status(500).json({ error: message });
   }
 });
 
@@ -355,8 +363,9 @@ app.get('/api/scenes/:id', async (req: Request, res: Response) => {
     }
 
     res.json(scene);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch scene' });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to fetch scene';
+    res.status(500).json({ error: message });
   }
 });
 

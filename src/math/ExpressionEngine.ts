@@ -6,7 +6,7 @@ const math = create(all) as MathJsStatic;
 export const ExpressionEngine = {
     evaluate: (script: string, existingObjects: Map<string, SceneObject>, visualizationMode: 'tip-to-tail' | 'parallelogram' | 'none') => {
         const parser = math.parser();
-        const newObjects = new Map<string, SceneObject>();
+        const newObjects = new Map<string, SceneObjectUnion>();
         const tempObjects: SceneObjectUnion[] = [];
         const errors = new Map<string, string>();
         const lines = script.split('\n');
@@ -68,20 +68,20 @@ export const ExpressionEngine = {
                         }
                     }
                 }
-            } catch (error: any) {
-                errors.set(lineId, error.message);
+            } catch (error: unknown) {
+                errors.set(lineId, error instanceof Error ? error.message : String(error));
             }
         });
 
         return { newObjects, tempObjects, errors };
     },
 
-    createSceneObjectFromResult: (name: string, result: any): SceneObject | null => {
+    createSceneObjectFromResult: (name: string, result: unknown): SceneObjectUnion | null => {
         // Use the object's name as its ID to prevent ID collisions
         const id = name;
 
-        if (Array.isArray(result) || (result && typeof result.toArray === 'function')) {
-            const resultArray = Array.isArray(result) ? result : result.toArray();
+        if (Array.isArray(result) || (typeof result === 'object' && result !== null && 'toArray' in result && typeof (result as { toArray: () => number[] | number[][] }).toArray === 'function')) {
+            const resultArray = Array.isArray(result) ? result : (result as { toArray: () => number[] | number[][] }).toArray();
 
             if (resultArray.length > 0 && Array.isArray(resultArray[0])) {
                 // Matrix

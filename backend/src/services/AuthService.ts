@@ -22,7 +22,8 @@ export class AuthService {
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
 
     // Exclude password from return
-    const { password: _, ...userWithoutPassword } = user;
+    // Exclude password from return
+    const { password: _unusedPassword, ...userWithoutPassword } = user;
     return { user: userWithoutPassword, token };
   }
 
@@ -39,7 +40,8 @@ export class AuthService {
 
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
 
-    const { password: _, ...userWithoutPassword } = user;
+    // Exclude password from return
+    const { password: _unusedPassword, ...userWithoutPassword } = user;
     return { user: userWithoutPassword, token };
   }
 }

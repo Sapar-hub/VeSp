@@ -76,8 +76,8 @@ export interface Actions {
     clearMultiSelection: () => void;
     updateExpression: (script: string) => void;
     evaluateExpressions: () => void;
-    getSceneAsJson: () => any;
-    loadSceneFromJson: (json: any) => void;
+    getSceneAsJson: () => unknown;
+    loadSceneFromJson: (json: unknown) => void;
     undo: () => void;
     redo: () => void;
 }
@@ -140,7 +140,7 @@ const useStore = create<AppState & Actions>()(
 
                         // Add the newly evaluated objects
                         for (const [id, obj] of newObjects.entries()) {
-                            newObjectsMap.set(id, obj as SceneObjectUnion);
+                            newObjectsMap.set(id, obj);
                         }
 
                         state.objects = newObjectsMap;
@@ -153,9 +153,10 @@ const useStore = create<AppState & Actions>()(
                     let newObject: SceneObjectUnion;
 
                     switch (type) {
-                        case 'vector':
-                            const start: [number, number, number] = (properties as Partial<Vector>)?.start ?? [0, 0, 0];
-                            const end: [number, number, number] = (properties as Partial<Vector>)?.end ?? [2, 2, 0];
+                        case 'vector': {
+                            const vectorProps = properties as Partial<Vector>;
+                            const start: [number, number, number] = vectorProps?.start ?? [0, 0, 0];
+                            const end: [number, number, number] = vectorProps?.end ?? [2, 2, 0];
                             newObject = {
                                 id,
                                 type: 'vector',
@@ -165,31 +166,36 @@ const useStore = create<AppState & Actions>()(
                                 start,
                                 end,
                                 components: [end[0] - start[0], end[1] - start[1], end[2] - start[2]],
-                                ...properties
-                            } as Vector;
+                                ...vectorProps
+                            };
                             break;
-                        case 'point':
+                        }
+                        case 'point': {
+                            const pointProps = properties as Partial<Point>;
                             newObject = {
                                 id,
                                 type: 'point',
                                 name: `p${get().objects.size + 1}`,
                                 color: '#0000ff',
                                 visible: true,
-                                position: [1, 1, 1],
-                                ...properties
-                            } as Point;
+                                position: pointProps?.position ?? [1, 1, 1],
+                                ...pointProps
+                            };
                             break;
-                        case 'matrix':
+                        }
+                        case 'matrix': {
+                            const matrixProps = properties as Partial<Matrix>;
                             newObject = {
                                 id,
                                 type: 'matrix',
                                 name: `m${get().objects.size + 1}`,
                                 color: '#00ff00',
                                 visible: false,
-                                values: [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
-                                ...properties
-                            } as Matrix;
+                                values: matrixProps?.values ?? [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+                                ...matrixProps
+                            };
                             break;
+                        }
                         default:
                             return { status: "InvalidType", payload: null };
                     }
@@ -215,8 +221,9 @@ const useStore = create<AppState & Actions>()(
                         if (objectToUpdate) {
                             Object.assign(objectToUpdate, properties);
                             if (objectToUpdate.type === 'vector') {
-                                const vec = objectToUpdate as Vector;
-                                if ((properties as Partial<Vector>).start || (properties as Partial<Vector>).end) {
+                                const vec = objectToUpdate;
+                                const props = properties as Partial<Vector>;
+                                if (props.start || props.end) {
                                     vec.components = [vec.end[0] - vec.start[0], vec.end[1] - vec.start[1], vec.end[2] - vec.start[2]];
                                 }
                                 updateExpressionsWithScene(state);
@@ -280,7 +287,7 @@ const useStore = create<AppState & Actions>()(
                     }
 
                     // Get the actual vector objects
-                    const vectors = basisVectorIds.map(id => get().objects.get(id)).filter(v => v?.type === 'vector') as Vector[];
+                    const vectors = basisVectorIds.map(id => get().objects.get(id)).filter((v): v is Vector => v?.type === 'vector');
 
                     if (vectors.length !== basisVectorIds.length) {
                         get().addNotification('Some selected IDs are not vectors', 'error');
@@ -311,7 +318,7 @@ const useStore = create<AppState & Actions>()(
                         return;
                     }
 
-                    const result = MathEngine.getVectorCoordinatesInBasis(object as Vector, targetBasisVectors);
+                    const result = MathEngine.getVectorCoordinatesInBasis(object, targetBasisVectors);
                     if (result.status === 'Success' && result.payload) {
                         // Update the object to reflect its coordinates in the new basis
                         // For now, this could involve creating a new representation of the vector
@@ -330,8 +337,8 @@ const useStore = create<AppState & Actions>()(
                 },
 
                 removeNotification: (notificationId: string) => {
-                    set(produce(state => {
-                        state.notifications = state.notifications.filter((n: { id: string; }) => n.id !== notificationId);
+                    set(produce((state: AppState) => {
+                        state.notifications = state.notifications.filter((n: Notification) => n.id !== notificationId);
                     }));
                 },
 
@@ -379,22 +386,24 @@ const useStore = create<AppState & Actions>()(
                     return serializableState;
                 },
 
-                loadSceneFromJson: (json: any) => {
-                    if (!json) {
+                loadSceneFromJson: (json: unknown) => {
+                    if (typeof json !== 'object' || json === null) {
                         console.error("Failed to load scene: Scene data is empty or invalid.");
                         return;
                     }
+                    const typedJson = json as AppState; // Assert to Record for easier property access
+
                     set(produce(state => {
-                        state.objects = new Map((json.objects || []).map((obj: SceneObjectUnion) => [obj.id, obj]));
-                        state.selectedObjectId = json.selectedObjectId || null;
-                        state.multiSelection = json.multiSelection || [];
-                        state.mode = json.mode || 'select';
-                        state.isProjectionExplorerActive = json.isProjectionExplorerActive || false;
-                        state.viewMode = json.viewMode || '2d';
-                        state.basisVectorIds = json.basisVectorIds || [];
-                        state.cameraState = json.cameraState || { position: [5, 5, 10], target: [0, 0, 0] };
-                        state.visualizationMode = json.visualizationMode || 'tip-to-tail';
-                        state.expressions = json.expressions || '';
+                        state.objects = new Map(((typedJson.objects as unknown) as SceneObjectUnion[] || []).map((obj: SceneObjectUnion) => [obj.id, obj]));
+                        state.selectedObjectId = typedJson.selectedObjectId as string || null;
+                        state.multiSelection = typedJson.multiSelection as string[] || [];
+                        state.mode = typedJson.mode as 'select' | 'addVector' | 'transform' | 'changeBasis' || 'select';
+                        state.isProjectionExplorerActive = typedJson.isProjectionExplorerActive as boolean || false;
+                        state.viewMode = typedJson.viewMode as '2d' | '3d' || '2d';
+                        state.basisVectorIds = typedJson.basisVectorIds as string[] || [];
+                        state.cameraState = typedJson.cameraState as { position: [number, number, number], target: [number, number, number] } || { position: [5, 5, 10], target: [0, 0, 0] };
+                        state.visualizationMode = typedJson.visualizationMode as 'none' | 'tip-to-tail' | 'parallelogram' || 'tip-to-tail';
+                        state.expressions = typedJson.expressions as string || '';
                         state.expressionErrors = new Map(); // Clear errors on load
                         state.tempObjects = []; // Clear temp objects on load
                         state.notifications = []; // Clear notifications on load
@@ -407,7 +416,7 @@ const useStore = create<AppState & Actions>()(
             }),
             {
                 partialize: (state) => {
-                    const { notifications, tempObjects, ...rest } = state;
+                    const { notifications: _notifications, tempObjects: _tempObjects, ...rest } = state;
                     return rest;
                 },
             }

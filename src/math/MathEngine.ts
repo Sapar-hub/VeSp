@@ -58,8 +58,8 @@ export const MathEngine = {
                 ...m1, id: crypto.randomUUID(), name: 'Product', values: result_values,
             };
             return { status: "Success", payload: resultMatrix };
-        } catch (e) {
-            return { status: "DimensionMismatch", payload: null };
+        } catch (_e) {
+            return { status: "ComputationFailed", payload: null };
         }
     },
 
@@ -71,7 +71,7 @@ export const MathEngine = {
             const inverted_values = math.inv(m.values);
             const resultMatrix: Matrix = { ...m, id: crypto.randomUUID(), name: 'Inverse', values: inverted_values };
             return { status: "Success", payload: resultMatrix };
-        } catch (e) {
+        } catch (_e) {
             return { status: "Singular", payload: null };
         }
     },
@@ -81,14 +81,18 @@ export const MathEngine = {
             return { status: "NotSquareMatrix", payload: null };
         }
         try {
-            const result = math.eigs(matrix.values) as any;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const result: any = math.eigs(matrix.values);
             // Math.js may return complex numbers, we need to handle this
             const eigenvalues = Array.isArray(result.values)
-                ? result.values.map((v: any) => (typeof v === 'object' && v.re !== undefined ? v.re : v))
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                ? result.values.map((v: any) => (typeof v === 'object' && 're' in v && typeof v.re === 'number' ? v.re : v as number))
                 : [];
             const eigenvectors = Array.isArray(result.eigenvectors)
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 ? result.eigenvectors.map((vec: any) =>
-                    Array.isArray(vec) ? vec.map((v: any) => (typeof v === 'object' && v.re !== undefined ? v.re : v)) : vec
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    Array.isArray(vec) ? vec.map((v: any) => (typeof v === 'object' && 're' in v && typeof v.re === 'number' ? v.re : v as number)) : vec
                 )
                 : [];
             return { status: "Success", payload: { eigenvalues, eigenvectors } };
@@ -136,8 +140,7 @@ export const MathEngine = {
             }
 
             const newComponentsRaw = math.multiply(matrix.values, object.components);
-            // Ensure it's a flat array
-            const newComponents = (Array.isArray(newComponentsRaw) ? newComponentsRaw : [newComponentsRaw]) as number[];
+            const newComponents = (Array.isArray(newComponentsRaw) ? newComponentsRaw : (newComponentsRaw as { toArray: () => number[] }).toArray()) as number[];
 
             const newEnd = vec3.add(vec3.create(), object.start, [newComponents[0], newComponents[1], newComponents[2] || 0]);
 
@@ -154,8 +157,7 @@ export const MathEngine = {
             }
 
             const newPositionRaw = math.multiply(matrix.values, object.position);
-            // Ensure it's a flat array
-            const newPosition = (Array.isArray(newPositionRaw) ? newPositionRaw : [newPositionRaw]) as number[];
+            const newPosition = (Array.isArray(newPositionRaw) ? newPositionRaw : (newPositionRaw as { toArray: () => number[] }).toArray()) as number[];
 
             const newPoint: Point = {
                 ...object,
@@ -201,7 +203,7 @@ export const MathEngine = {
             // Now solve: basisMatrix * coords = vector.components
             // This requires matrix inversion: coords = inv(basisMatrix) * vector.components
             // Using a simple Gaussian elimination for now
-            let augmentedMatrix: number[][] = [];
+            const augmentedMatrix: number[][] = [];
             for (let i = 0; i < n; i++) {
                 augmentedMatrix.push([...basisMatrix[i], vector.components[i]]);
             }
@@ -242,32 +244,35 @@ export const MathEngine = {
             }
 
             return { status: "Success", payload: solution };
-        } catch (e) {
+        } catch (_e) {
             return { status: "InvalidBasis", payload: null };
         }
     },
 
-    findKernel: (_matrix: Matrix): Response<Vector[]> => {
+    findKernel: (matrix: Matrix): Response<Vector[]> => {
+        console.log(matrix);
         try {
             // Implementation of null space calculation would go here
             // For now, returning empty array as a placeholder
             return { status: "Success", payload: [] };
-        } catch (e) {
+        } catch (_e) {
             return { status: "Success", payload: [] }; // Or a failure response
         }
     },
 
-    findImage: (_matrix: Matrix): Response<Vector[]> => {
+    findImage: (matrix: Matrix): Response<Vector[]> => {
+        console.log(matrix);
         // The image (column space) of a matrix is the span of its column vectors
         try {
             // Placeholder implementation until nullSpace function is properly available
             return { status: "Success", payload: [] };
-        } catch (e) {
+        } catch (_e) {
             return { status: "Success", payload: [] };
         }
     },
 
-    findOrthogonalComplement: (_subspaceBasis: Vector[]): Response<Vector[]> => {
+    findOrthogonalComplement: (subspaceBasis: Vector[]): Response<Vector[]> => {
+        console.log(subspaceBasis);
         // const matrix = subspaceBasis.map(v => v.components);
         try {
             // const nullSpace = math.nullSpace(matrix);
@@ -283,7 +288,7 @@ export const MathEngine = {
             // }));
             // return { status: "Success", payload: basisVectors };
             return { status: "Success", payload: [] };
-        } catch (e) {
+        } catch (_e) {
             return { status: "ComputationFailed", payload: null };
         }
     },

@@ -44,8 +44,8 @@ export const api = {
       } else {
         return { success: false, message: data.error || response.statusText };
       }
-    } catch (error: any) {
-      return { success: false, message: error.message || 'Network error' };
+    } catch (error: unknown) {
+      return { success: false, message: error instanceof Error ? error.message : 'Network error' };
     }
   },
 
@@ -62,12 +62,12 @@ export const api = {
       } else {
         return { success: false, message: data.error || response.statusText };
       }
-    } catch (error: any) {
-      return { success: false, message: error.message || 'Network error' };
+    } catch (error: unknown) {
+      return { success: false, message: error instanceof Error ? error.message : 'Network error' };
     }
   },
 
-  async saveScene(name: string, sceneData: any): Promise<ApiResponse<Scene>> {
+  async saveScene(name: string, sceneData: unknown): Promise<ApiResponse<Scene>> {
     try {
       const response = await fetch(`${API_BASE_URL}/api/scenes`, {
         method: 'POST',
@@ -80,8 +80,8 @@ export const api = {
       } else {
         return { success: false, message: data.error || response.statusText };
       }
-    } catch (error: any) {
-      return { success: false, message: error.message || 'Network error' };
+    } catch (error: unknown) {
+      return { success: false, message: error instanceof Error ? error.message : 'Network error' };
     }
   },
 
@@ -97,8 +97,8 @@ export const api = {
       } else {
         return { success: false, message: data.error || response.statusText };
       }
-    } catch (error: any) {
-      return { success: false, message: error.message || 'Network error' };
+    } catch (error: unknown) {
+      return { success: false, message: error instanceof Error ? error.message : 'Network error' };
     }
   },
 
@@ -114,12 +114,12 @@ export const api = {
       } else {
         return { success: false, message: data.error || response.statusText };
       }
-    } catch (error: any) {
-      return { success: false, message: error.message || 'Network error' };
+    } catch (error: unknown) {
+      return { success: false, message: error instanceof Error ? error.message : 'Network error' };
     }
   },
 
-  async updateScene(id: string, name: string, sceneData: any): Promise<ApiResponse<Scene>> {
+  async updateScene(id: string, name: string, sceneData: unknown): Promise<ApiResponse<Scene>> {
     try {
       const response = await fetch(`${API_BASE_URL}/api/scenes/${id}`, {
         method: 'PUT',
@@ -132,8 +132,8 @@ export const api = {
       } else {
         return { success: false, message: data.error || response.statusText };
       }
-    } catch (error: any) {
-      return { success: false, message: error.message || 'Network error' };
+    } catch (error: unknown) {
+      return { success: false, message: error instanceof Error ? error.message : 'Network error' };
     }
   },
 
@@ -149,8 +149,8 @@ export const api = {
       } else {
         return { success: false, message: data.error || response.statusText };
       }
-    } catch (error: any) {
-      return { success: false, message: error.message || 'Network error' };
+    } catch (error: unknown) {
+      return { success: false, message: error instanceof Error ? error.message : 'Network error' };
     }
   },
 };

@@ -96,7 +96,7 @@ export const isCoreMathExpression = (latexInput: string): boolean => {
   
   // Check if the input contains only safe, core math constructs
   // This is a simplified check - in reality, you'd want a more comprehensive parser
-  const coreExpressionRegex = /^[\s\w\d+\-*/=<>^_{}\\(),.\[\]|:;'"!?#%&$@~`<>]+$/;
+  const coreExpressionRegex = /^[\s\w\d+\-*/=<>^_{}\\(),.[\]|:;'"!?#%&$@~`<>]+$/;
   
   // We'll use at least one of the patterns to avoid the unused variable error
   const hasCorePattern = coreMathPatterns.some(pattern => pattern.test(latexInput));
@@ -142,7 +142,7 @@ export const parseLatexPatterns = (input: string): { expression: string; positio
   // More comprehensive regex to detect various LaTeX patterns
   const latexPatterns = [
     // Display math: \[ ... \] 
-    { regex: /\\\[(.*?)\\\]/gs, extract: (match: RegExpExecArray) => match[0] },
+    { regex: /\[(.*?)]/gs, extract: (match: RegExpExecArray) => match[0] },
     // Inline math: \( ... \)
     { regex: /\\\((.*?)\\\)/gs, extract: (match: RegExpExecArray) => match[0] },
     // Display math: $$ ... $$
@@ -215,7 +215,7 @@ export const processLatexExpressions = (input: string): LaTeXExpression[] => {
  * @param delay The delay in milliseconds
  * @returns Debounced function
  */
-export const debounce = <T extends (...args: any[]) => any>(func: T, delay: number) => {
+export const debounce = <T extends (...args: unknown[]) => unknown>(func: T, delay: number) => {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
   
   return (...args: Parameters<T>): void => {

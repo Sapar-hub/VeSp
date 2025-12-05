@@ -113,12 +113,6 @@ export const SceneManagementModal: React.FC<SceneManagementModalProps> = ({ isOp
   const [editingSceneId, setEditingSceneId] = useState<string | null>(null);
   const [editingSceneName, setEditingSceneName] = useState('');
 
-  useEffect(() => {
-    if (isOpen && isAuthenticated) {
-      fetchScenes();
-    }
-  }, [isOpen, isAuthenticated, token]);
-
   const fetchScenes = async () => {
     setLoading(true);
     setError(null);
@@ -130,6 +124,13 @@ export const SceneManagementModal: React.FC<SceneManagementModalProps> = ({ isOp
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    if (isOpen && isAuthenticated) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchScenes();
+    }
+  }, [isOpen, isAuthenticated, token]);
 
   const handleSaveScene = async () => {
     if (!newSceneName.trim()) {

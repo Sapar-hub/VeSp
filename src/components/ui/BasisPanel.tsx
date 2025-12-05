@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import useStore from '../../store/mainStore';
+import React, { useMemo } from 'react';
+import useStore, { Vector } from '../../store/mainStore';
 import { MathEngine } from '../../math/MathEngine';
 
 import { theme, commonStyles } from '../../styles/theme';
@@ -31,57 +31,40 @@ const vectorItemStyle: React.CSSProperties = {
 
 export const BasisPanel: React.FC = () => {
     const { mode, multiSelection, setBasis, setMode, objects, addNotification } = useStore();
-    const [selectedVectors, setSelectedVectors] = useState<string[]>([]);
-    const [validityMessage, setValidityMessage] = useState('');
 
-    useEffect(() => {
-        if (mode === 'changeBasis') {
-            setSelectedVectors(multiSelection);
-        }
-    }, [multiSelection, mode]);
+    // Derived state
+    const vectors = useMemo(() => multiSelection
+        .map(id => objects.get(id))
+        .filter((obj): obj is Vector => obj?.type === 'vector'),
+        [multiSelection, objects]);
 
-    // Check validity of selected vectors as basis
-    useEffect(() => {
-        if (selectedVectors.length > 0) {
-            const vectors = selectedVectors
-                .map(id => objects.get(id))
-                .filter(obj => obj?.type === 'vector')
-                .map(obj => obj) as any[];
-
-            if (vectors.length >= 2 && vectors.length <= 3) {
-                const linearDependent = MathEngine.checkLinearDependency(vectors);
-                if (linearDependent) {
-                    setValidityMessage('Vectors are linearly dependent. Select linearly independent vectors for a valid basis.');
-                } else {
-                    setValidityMessage('Valid basis selection!');
-                }
+    const validityMessage = useMemo(() => {
+        if (vectors.length >= 2 && vectors.length <= 3) {
+            const linearDependent = MathEngine.checkLinearDependency(vectors);
+            if (linearDependent) {
+                return 'Vectors are linearly dependent. Select linearly independent vectors for a valid basis.';
             } else {
-                setValidityMessage('');
+                return 'Valid basis selection!';
             }
         } else {
-            setValidityMessage('');
+            return '';
         }
-    }, [selectedVectors, objects]);
+    }, [vectors]);
 
     if (mode !== 'changeBasis') {
         return null;
     }
 
     const handleSetBasis = () => {
-        if (selectedVectors.length >= 2 && selectedVectors.length <= 3) {
-            // Double-check linear independence before setting
-            const vectors = selectedVectors
-                .map(id => objects.get(id))
-                .filter(obj => obj?.type === 'vector')
-                .map(obj => obj) as any[];
-
+        if (vectors.length >= 2 && vectors.length <= 3) {
+            // Double-check linear independence before setting (though button should be disabled)
             if (vectors.length > 0) {
                 const linearDependent = MathEngine.checkLinearDependency(vectors);
                 if (linearDependent) {
                     addNotification('Selected vectors are linearly dependent. Please select linearly independent vectors.', 'error');
                 } else {
-                    setBasis(selectedVectors);
-                    addNotification(`New basis set with ${selectedVectors.length} vectors`, 'success');
+                    setBasis(multiSelection);
+                    addNotification(`New basis set with ${vectors.length} vectors`, 'success');
                     setMode('select');
                 }
             }
@@ -100,10 +83,10 @@ export const BasisPanel: React.FC = () => {
             </p>
 
             <div style={{ background: '#2a2a2a', padding: '8px', borderRadius: '4px', minHeight: '60px', maxHeight: '120px', overflowY: 'auto' }}>
-                {selectedVectors.length === 0 ? (
+                {multiSelection.length === 0 ? (
                     <div style={{ color: '#888', fontStyle: 'italic' }}>No vectors selected</div>
                 ) : (
-                    selectedVectors.map(id => {
+                    multiSelection.map(id => {
                         const obj = objects.get(id);
                         return obj ? (
                             <div key={id} style={vectorItemStyle}>
@@ -130,9 +113,9 @@ export const BasisPanel: React.FC = () => {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
                 <button
-                    style={{ ...buttonStyle, background: (selectedVectors.length < 2 || selectedVectors.length > 3 || validityMessage.includes('linearly dependent')) ? '#6c757d' : '#28a745' }}
+                    style={{ ...buttonStyle, background: (vectors.length < 2 || vectors.length > 3 || validityMessage.includes('linearly dependent')) ? '#6c757d' : '#28a745' }}
                     onClick={handleSetBasis}
-                    disabled={selectedVectors.length < 2 || selectedVectors.length > 3 || validityMessage.includes('linearly dependent')}
+                    disabled={vectors.length < 2 || vectors.length > 3 || validityMessage.includes('linearly dependent')}
                 >
                     Set as New Basis
                 </button>

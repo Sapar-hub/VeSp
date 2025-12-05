@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
 import { api } from '../../src/io/api';
 
 describe('api', () => {
@@ -17,7 +17,7 @@ describe('api', () => {
     const mockToken = 'abc-123';
     const mockResponse = { user: mockUser, token: mockToken };
 
-    (global.fetch as any).mockResolvedValue({
+    (global.fetch as Mock).mockResolvedValue({
       ok: true,
       json: async () => mockResponse,
     });
@@ -33,7 +33,7 @@ describe('api', () => {
   it('register handles error correctly', async () => {
     const mockError = { error: 'User already exists' };
 
-    (global.fetch as any).mockResolvedValue({
+    (global.fetch as Mock).mockResolvedValue({
       ok: false,
       statusText: 'Bad Request',
       json: async () => mockError,
@@ -53,7 +53,7 @@ describe('api', () => {
       // If data is empty object:
       const mockError = {};
   
-      (global.fetch as any).mockResolvedValue({
+      (global.fetch as Mock).mockResolvedValue({
         ok: false,
         statusText: 'Bad Request',
         json: async () => mockError,

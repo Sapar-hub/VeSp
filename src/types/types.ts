@@ -23,7 +23,7 @@ export interface Scene {
   ownerId: string;
   createdAt: string;
   updatedAt: string;
-  data: any; // Stores the entire frontend state
+  data: Record<string, unknown>; // Stores the entire frontend state
 }
 
 export interface LaTeXExpression {
@@ -50,7 +50,7 @@ export interface ExpressionInputPanelState {
   // ... existing properties ...
   latexRenderingEnabled?: boolean;     // Whether LaTeX rendering is active
   latexLibrary?: 'katex' | null;       // The rendering library in use
-  latexOptions?: Record<string, any>;  // Configuration options for the LaTeX renderer
+  latexOptions?: Record<string, unknown>;  // Configuration options for the LaTeX renderer
   errorDisplayMode?: 'inline' | 'tooltip' | 'status'; // How to display errors
 }
 

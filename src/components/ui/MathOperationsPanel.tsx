@@ -75,7 +75,7 @@ export const MathOperationsPanel: React.FC<MathOperationsPanelProps> = ({ select
                         end: result.payload,
                         name: 'Cross Product'
                     };
-                    createObject('vector', crossVector as any);
+                    createObject('vector', crossVector as Partial<Vector>);
                     addNotification('Cross product vector created', 'success');
                 }
                 break;
