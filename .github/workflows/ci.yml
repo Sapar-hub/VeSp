@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install Dependencies (Frontend)
+      run: npm ci
+
+    - name: Lint (Frontend)
+      run: npm run lint
+
+    - name: Test (Frontend)
+      run: npm test -- --run
+
+    - name: Install Dependencies (Backend)
+      working-directory: ./backend
+      run: npm ci
+
+    - name: Build (Backend)
+      working-directory: ./backend
+      run: npm run build

@@ -13,12 +13,16 @@ import { LaTeXExpression } from '../types/types';
  */
 export const renderLatex = (
   latexInput: string, 
-  options: katex.KatexOptions = { throwOnError: false, errorColor: '#cc0000' }
+  options: katex.KatexOptions = { throwOnError: true, errorColor: '#cc0000' }
 ): { 
   renderedHTML: string; 
   isValid: boolean; 
   error?: string; 
 } => {
+  if (!latexInput.trim()) {
+    return { renderedHTML: '', isValid: true };
+  }
+
   try {
     const renderedHTML = katex.renderToString(latexInput, options);
     return { renderedHTML, isValid: true };

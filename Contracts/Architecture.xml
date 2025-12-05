@@ -10,13 +10,17 @@
 
     <TechnologyStack>
         <Frontend>React + TypeScript</Frontend>
+        <Backend>Node.js + Express</Backend>
         <Graphics3D>Three.js + OrbitControls</Graphics3D>
         <Graphics2D>react-konva</Graphics2D>
         <Math>math.js + gl-matrix</Math>
         <StateManagement>Zustand</StateManagement>
         <FormulaRendering>KaTeX</FormulaRendering>
         <Serialization>URL-parameters</Serialization>
-        <Deployment>Vercel</Deployment>
+        <Database>PostgreSQL + Prisma</Database>
+        <Authentication>JWT</Authentication>
+        <Containerization>Docker Compose</Containerization>
+        <Deployment>Vercel (Frontend) + VPS (Backend)</Deployment>
     </TechnologyStack>
 
     <Modules>
@@ -29,6 +33,21 @@
             <Component id="HistoryManager">
                 <Description>Подсистема для управления историей действий (Undo/Redo). Будет реализована с помощью мидлвара zustand/middleware/temporal.</Description>
                 <API>history.undo(), history.redo()</API>
+            </Component>
+        </Module>
+
+        <Module name="Backend">
+            <Description>REST API for user management and scene persistence.</Description>
+            <Component id="AuthService">
+                <Description>Handles user registration and login using JWT.</Description>
+                <API>POST /api/auth/register, POST /api/auth/login</API>
+            </Component>
+            <Component id="SceneService">
+                <Description>Manages saving, loading, and listing scenes.</Description>
+                <API>POST /api/scenes, GET /api/scenes, GET /api/scenes/:id</API>
+            </Component>
+            <Component id="Database">
+                <Description>PostgreSQL database accessed via Prisma Client.</Description>
             </Component>
         </Module>
 
@@ -161,6 +180,26 @@
                 <Property name="tempObjects" type="SceneObjectUnion[]" description="Temporary objects for visualization (e.g., ghost vectors for tip-to-tail addition)."/>
                 <Property name="expressions" type="string" description="A multi-line script of user-defined expressions."/>
                 <Property name="expressionErrors" type="Map<string, string>" description="Errors for each expression"/>
+            </Properties>
+        </Model>
+        <Model name="User">
+            <Description>Backend entity for a registered user.</Description>
+            <Properties>
+                <Property name="id" type="number"/>
+                <Property name="email" type="string"/>
+                <Property name="password" type="string" description="Hashed password"/>
+                <Property name="createdAt" type="Date"/>
+            </Properties>
+        </Model>
+        <Model name="Scene">
+            <Description>Backend entity for a saved scene.</Description>
+            <Properties>
+                <Property name="id" type="number"/>
+                <Property name="name" type="string"/>
+                <Property name="data" type="Json" description="Complete AppState snapshot"/>
+                <Property name="isPublic" type="boolean"/>
+                <Property name="ownerId" type="number"/>
+                <Property name="createdAt" type="Date"/>
             </Properties>
         </Model>
     </DataModels>

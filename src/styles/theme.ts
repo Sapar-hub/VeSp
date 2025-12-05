@@ -9,6 +9,7 @@ export const theme = {
         border: 'rgba(255, 255, 255, 0.1)',
         buttonHover: '#0056b3', // Darker shade of primary
         buttonDisabled: '#4e555b',
+        inputBackground: 'rgba(0, 0, 0, 0.2)',
     },
     spacing: {
         panelPadding: '15px',

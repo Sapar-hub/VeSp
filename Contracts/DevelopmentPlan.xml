@@ -732,4 +732,91 @@
         </Class>
     </Module>
 
+    <!-- ============================ BACKEND MODULE ============================ -->
+    <Module name="Backend">
+        <FilePath>backend/src/index.ts</FilePath>
+        <Description>Server entry point. Configures Express app, middleware, and routes.</Description>
+        
+        <Service name="AuthService">
+            <FilePath>backend/src/services/AuthService.ts</FilePath>
+            <Description>Handles user registration and authentication.</Description>
+            <Method name="register">
+                <Input>
+                    <Parameter name="email" type="string"/>
+                    <Parameter name="password" type="string"/>
+                </Input>
+                <Output>
+                    <Type>object</Type>
+                    <PossibleReturns>
+                        <Return status="201" details="User created" payload="{ token, user }"/>
+                        <Return status="400" details="User already exists or invalid data" />
+                    </PossibleReturns>
+                </Output>
+            </Method>
+            <Method name="login">
+                <Input>
+                    <Parameter name="email" type="string"/>
+                    <Parameter name="password" type="string"/>
+                </Input>
+                <Output>
+                    <Type>object</Type>
+                    <PossibleReturns>
+                        <Return status="200" details="Login successful" payload="{ token }"/>
+                        <Return status="401" details="Invalid credentials" />
+                    </PossibleReturns>
+                </Output>
+            </Method>
+        </Service>
+
+        <Service name="SceneService">
+            <FilePath>backend/src/services/SceneService.ts</FilePath>
+            <Description>Manages scene persistence.</Description>
+            <Method name="saveScene">
+                <Input>
+                    <Parameter name="userId" type="number"/>
+                    <Parameter name="name" type="string"/>
+                    <Parameter name="data" type="Json"/>
+                    <Parameter name="isPublic" type="boolean"/>
+                </Input>
+                <Output>
+                    <Type>object</Type>
+                    <PossibleReturns>
+                        <Return status="201" details="Scene saved" payload="Scene"/>
+                    </PossibleReturns>
+                </Output>
+            </Method>
+            <Method name="getPublicScenes">
+                <Output>
+                    <Type>Scene[]</Type>
+                </Output>
+            </Method>
+            <Method name="getUserScenes">
+                <Input>
+                    <Parameter name="userId" type="number"/>
+                </Input>
+                <Output>
+                    <Type>Scene[]</Type>
+                </Output>
+            </Method>
+            <Method name="getSceneById">
+                <Input>
+                    <Parameter name="sceneId" type="number"/>
+                </Input>
+                <Output>
+                    <Type>object</Type>
+                    <PossibleReturns>
+                        <Return status="200" details="Scene found" payload="Scene"/>
+                        <Return status="404" details="Scene not found" />
+                    </PossibleReturns>
+                </Output>
+            </Method>
+        </Service>
+
+        <Component id="Database">
+            <Description>Prisma Client configuration and schema.</Description>
+            <FilePath>backend/prisma/schema.prisma</FilePath>
+            <Details>Defines User and Scene models with relation.</Details>
+        </Component>
+    </Module>
+
 </DevelopmentPlan>

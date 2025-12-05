@@ -76,6 +76,8 @@ export interface Actions {
     clearMultiSelection: () => void;
     updateExpression: (script: string) => void;
     evaluateExpressions: () => void;
+    getSceneAsJson: () => any;
+    loadSceneFromJson: (json: any) => void;
     undo: () => void;
     redo: () => void;
 }
@@ -358,6 +360,46 @@ const useStore = create<AppState & Actions>()(
                         state.multiSelection = newMultiSelection;
                         state.selectedObjectId = null;
                     }));
+                },
+
+                getSceneAsJson: () => {
+                    const state = get();
+                    const serializableState = {
+                        objects: Array.from(state.objects.values()),
+                        selectedObjectId: state.selectedObjectId,
+                        multiSelection: state.multiSelection,
+                        mode: state.mode,
+                        isProjectionExplorerActive: state.isProjectionExplorerActive,
+                        viewMode: state.viewMode,
+                        basisVectorIds: state.basisVectorIds,
+                        cameraState: state.cameraState,
+                        visualizationMode: state.visualizationMode,
+                        expressions: state.expressions,
+                    };
+                    return serializableState;
+                },
+
+                loadSceneFromJson: (json: any) => {
+                    if (!json) {
+                        console.error("Failed to load scene: Scene data is empty or invalid.");
+                        return;
+                    }
+                    set(produce(state => {
+                        state.objects = new Map((json.objects || []).map((obj: SceneObjectUnion) => [obj.id, obj]));
+                        state.selectedObjectId = json.selectedObjectId || null;
+                        state.multiSelection = json.multiSelection || [];
+                        state.mode = json.mode || 'select';
+                        state.isProjectionExplorerActive = json.isProjectionExplorerActive || false;
+                        state.viewMode = json.viewMode || '2d';
+                        state.basisVectorIds = json.basisVectorIds || [];
+                        state.cameraState = json.cameraState || { position: [5, 5, 10], target: [0, 0, 0] };
+                        state.visualizationMode = json.visualizationMode || 'tip-to-tail';
+                        state.expressions = json.expressions || '';
+                        state.expressionErrors = new Map(); // Clear errors on load
+                        state.tempObjects = []; // Clear temp objects on load
+                        state.notifications = []; // Clear notifications on load
+                    }));
+                    get().evaluateExpressions(); // Re-evaluate expressions after loading
                 },
 
                 undo: () => get().undo(),

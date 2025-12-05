@@ -340,4 +340,110 @@
         </Goal>
     </Scenario>
 
+    <Scenario id="SCN_016">
+        <Description>Пользователь регистрирует новый аккаунт для сохранения своих работ.</Description>
+        <Actor type="Student">
+            <Name>Студент или любитель математики</Name>
+        </Actor>
+        <Action>
+            <Verb>Регистрируется</Verb>
+            <Details>
+                <Parameter name="Email">Адрес электронной почты</Parameter>
+                <Parameter name="Password">Пароль</Parameter>
+            </Details>
+        </Action>
+        <Goal>
+            <Description>Создать персональный аккаунт для доступа к функциям облачного сохранения</Description>
+            <Output>
+                <Status>AccountCreated</Status>
+                <Token>JWT токен для аутентификации</Token>
+                <UserProfile>Данные профиля пользователя</UserProfile>
+            </Output>
+        </Goal>
+    </Scenario>
+
+    <Scenario id="SCN_017">
+        <Description>Пользователь входит в систему для доступа к своим сохраненным сценам.</Description>
+        <Actor type="Student">
+            <Name>Студент или любитель математики</Name>
+        </Actor>
+        <Action>
+            <Verb>Входит в систему</Verb>
+            <Details>
+                <Parameter name="Email">Адрес электронной почты</Parameter>
+                <Parameter name="Password">Пароль</Parameter>
+            </Details>
+        </Action>
+        <Goal>
+            <Description>Аутентифицироваться и получить доступ к приватным данным</Description>
+            <Output>
+                <Status>LoggedIn</Status>
+                <Token>JWT токен сессии</Token>
+            </Output>
+        </Goal>
+    </Scenario>
+
+    <Scenario id="SCN_018">
+        <Description>Пользователь сохраняет текущую сцену в облако.</Description>
+        <Actor type="Student">
+            <Name>Студент или любитель математики</Name>
+        </Actor>
+        <Action>
+            <Verb>Сохраняет сцену</Verb>
+            <Details>
+                <Parameter name="SceneName">Название сцены</Parameter>
+                <Parameter name="IsPublic">Флаг публичного доступа</Parameter>
+                <Parameter name="SceneData">Полный JSON слепок состояния приложения</Parameter>
+            </Details>
+        </Action>
+        <Goal>
+            <Description>Персистентно сохранить работу для последующего использования</Description>
+            <Output>
+                <Status>SceneSaved</Status>
+                <SceneID>Уникальный ID сохраненной сцены</SceneID>
+                <Timestamp>Время сохранения</Timestamp>
+            </Output>
+        </Goal>
+    </Scenario>
+
+    <Scenario id="SCN_019">
+        <Description>Пользователь загружает ранее сохраненную сцену из списка.</Description>
+        <Actor type="Student">
+            <Name>Студент или любитель математики</Name>
+        </Actor>
+        <Action>
+            <Verb>Загружает сцену</Verb>
+            <Details>
+                <Parameter name="SceneID">ID сцены для загрузки</Parameter>
+            </Details>
+        </Action>
+        <Goal>
+            <Description>Восстановить состояние приложения из сохраненной записи</Description>
+            <Output>
+                <Status>SceneLoaded</Status>
+                <AppState>Восстановленное состояние (объекты, камера, настройки)</AppState>
+            </Output>
+        </Goal>
+    </Scenario>
+
+    <Scenario id="SCN_020">
+        <Description>Пользователь получает публичную ссылку на свою сцену для обмена.</Description>
+        <Actor type="Student">
+            <Name>Студент или любитель математики</Name>
+        </Actor>
+        <Action>
+            <Verb>Делится сценой</Verb>
+            <Details>
+                <Parameter name="SceneID">ID сцены</Parameter>
+            </Details>
+        </Action>
+        <Goal>
+            <Description>Предоставить доступ к сцене другим пользователям</Description>
+            <Output>
+                <Status>LinkGenerated</Status>
+                <PublicURL>URL для доступа к сцене (например, /scene/:id)</PublicURL>
+            </Output>
+        </Goal>
+    </Scenario>
+
 </RequirementsAnalysis>

@@ -31,8 +31,19 @@
         </Tools>
     </Frontend>
 
+    <Backend>
+        <Runtime name="Node.js" version="20.x" purpose="Server-side JavaScript runtime environment." />
+        <Framework name="Express" version="4.19.x" purpose="Minimalist web framework for Node.js to build the REST API." />
+        <Language name="TypeScript" version="5.6.x" purpose="Ensures type safety across the full stack." />
+        <Database name="PostgreSQL" version="16" purpose="Relational database with JSONB support for flexible scene data storage." />
+        <ORM name="Prisma" version="6.x" purpose="Modern ORM for type-safe database access and schema management." />
+        <Authentication library="jsonwebtoken" purpose="JWT-based stateless authentication." />
+        <Infrastructure name="Docker" purpose="Containerization of the application services (App, API, DB)." />
+    </Backend>
+
     <Deployment>
-        <Platform name="Vercel" purpose="Платформа для развертывания фронтенд-приложений с автоматическим CI/CD." />
+        <Platform name="Vercel" purpose="Frontend deployment." />
+        <Platform name="Docker/VPS" purpose="Backend and Database deployment." />
     </Deployment>
 
 </TechnologyStack>

@@ -1,5 +1,31 @@
 // Type definitions for scene objects and LaTeX expression types
 
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  message?: string;
+  token?: string;
+}
+
+export interface User {
+  id: string;
+  email: string;
+}
+
+export interface AuthResponseData {
+  user: User;
+  token: string;
+}
+
+export interface Scene {
+  id: string;
+  name: string;
+  ownerId: string;
+  createdAt: string;
+  updatedAt: string;
+  data: any; // Stores the entire frontend state
+}
+
 export interface LaTeXExpression {
   id: string;                    // Unique identifier for the expression
   rawInput: string;             // The original user input containing LaTeX syntax

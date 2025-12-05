@@ -2,19 +2,27 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { InlineLatexRenderer } from '../../src/components/ExpressionInput/InlineLatexRenderer';
+import { vi } from 'vitest';
 
 // Mock KaTeX
-jest.mock('katex', () => ({
-  renderToString: jest.fn((input: string) => {
+vi.mock('katex', () => {
+  const renderToString = vi.fn((input: string) => {
     if (input.includes('\\undefined')) {
       throw new Error('KaTeX parse error');
     }
     return `<span class="katex">${input}</span>`;
-  }),
-}));
+  });
+
+  return {
+    default: {
+      renderToString,
+    },
+    renderToString,
+  };
+});
 
 describe('InlineLatexRenderer Integration', () => {
-  const mockOnChange = jest.fn();
+  const mockOnChange = vi.fn();
 
   beforeEach(() => {
     mockOnChange.mockClear();
@@ -64,9 +72,11 @@ describe('InlineLatexRenderer Integration', () => {
       />
     );
 
-    // Check for error handling
+    // Check that the error is visually indicated
     await waitFor(() => {
-      expect(mockOnChange).toHaveBeenCalledWith('\\undefinedcommand');
+      const errorElement = screen.getByRole('alert');
+      expect(errorElement).toBeInTheDocument();
+      expect(errorElement).toHaveClass('katex-error');
     });
   });
 
