@@ -2,18 +2,39 @@ import React, { useRef, useState } from 'react';
 import { Stage, Layer } from 'react-konva';
 import useStore from '../../store/mainStore';
 import Konva from 'konva';
-import { drawSceneObject, drawGridAndAxes } from '../../rendering/KonvaDrawer.tsx';
+import { drawSceneObject, drawGridAndAxes, drawBasisAxes, drawBasisGrid, drawCovector } from '../../rendering/KonvaDrawer.tsx';
+import type { Vector } from '../../store/mainStore'; // Import Vector type
 
 const PIXELS_PER_UNIT = 50;
 
 export const KonvaCanvas: React.FC = () => {
-    const { objects, tempObjects, selectedObjectId, multiSelection, setSelectedObjectId, updateObject, mode, toggleMultiSelect } = useStore(state => state);
+    const { objects, tempObjects, selectedObjectId, multiSelection, setSelectedObjectId, updateObject, mode, toggleMultiSelect, basisVectorIds, isDualSpaceVisible } = useStore(state => state);
     const stageRef = useRef<Konva.Stage>(null);
     const [stageState, setStageState] = useState({
         scale: 1,
         x: window.innerWidth / 2,
         y: window.innerHeight / 2
     });
+
+    // Memoize basis vectors to prevent unnecessary re-renders
+    const basisVectors = React.useMemo(() => {
+        return basisVectorIds.map(id => objects.get(id)).filter((v): v is Vector => v?.type === 'vector');
+    }, [basisVectorIds, objects]);
+
+    // Check if the current basis is the standard 2D basis
+    const isStandardBasis = React.useMemo(() => {
+        if (basisVectors.length < 2) return false;
+
+        const x = basisVectors[0].components;
+        const y = basisVectors[1].components;
+
+        const isIdentity = (v: [number, number, number], target: [number, number, number]) => 
+            Math.abs(v[0] - target[0]) < 0.001 &&
+            Math.abs(v[1] - target[1]) < 0.001;
+
+        // Check x=[1,0] and y=[0,1]
+        return isIdentity(x, [1, 0, 0]) && isIdentity(y, [0, 1, 0]);
+    }, [basisVectors]);
 
     console.log('Rendering KonvaCanvas with objects:', objects);
 
@@ -46,7 +67,7 @@ export const KonvaCanvas: React.FC = () => {
         const id = e.target.id();
         const object = objects.get(id);
         if (object && object.type === 'vector') {
-            const newStart: [number, number, number] = [e.target.x() / PIXELS_PER_UNIT, -e.target.y() / PIXELS_PER_UNIT, 0];
+            const newStart: [number, number, number] = [e.target.x() / PIXELS_PER_UNIT, e.target.y() / PIXELS_PER_UNIT, 0];
             const newEnd: [number, number, number] = [newStart[0] + object.components[0], newStart[1] + object.components[1], 0];
             updateObject(id, { start: newStart, end: newEnd });
         }
@@ -102,7 +123,14 @@ export const KonvaCanvas: React.FC = () => {
                 onDragEnd={() => setStageState({ ...stageState, x: stageRef.current?.x() || 0, y: stageRef.current?.y() || 0 })}
             >
                 <Layer key={objects.size}>
-                    {drawGridAndAxes(window.innerWidth, window.innerHeight, stageState.scale, stageState.x, stageState.y)}
+                    {!isStandardBasis && basisVectors.length > 0 ? (
+                        <>
+                            {drawBasisGrid(basisVectors)}
+                            {drawBasisAxes(basisVectors)}
+                        </>
+                    ) : (
+                        drawGridAndAxes(window.innerWidth, window.innerHeight, stageState.scale, stageState.x, stageState.y)
+                    )}
 
                     {Array.from(objects.values())
                         .filter(obj => obj.visible)
@@ -111,7 +139,12 @@ export const KonvaCanvas: React.FC = () => {
                                 const isSelected = selectedObjectId === obj.id || multiSelection.includes(obj.id);
                                 const isDraggable = mode === 'select';
 
-                                return drawSceneObject(obj, isSelected, isDraggable, handleDragEnd);
+                                return (
+                                    <React.Fragment key={obj.id}>
+                                        {drawSceneObject(obj, isSelected, isDraggable, handleDragEnd)}
+                                        {isDualSpaceVisible && isSelected && drawCovector(obj)}
+                                    </React.Fragment>
+                                );
                             }
 
                             const isSelected = selectedObjectId === obj.id || multiSelection.includes(obj.id);

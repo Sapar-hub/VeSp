@@ -62,7 +62,7 @@
                 <API>&lt;KonvaCanvas /&gt;</API>
             </Component>
             <Component id="ThreeCanvas">
-                <Description>Контейнер для 3D-сцены, управляемой @react-three/fiber. Рендерит 3D-объекты из состояния.</Description>
+                <Description>Контейнер для 3D-сцены, управляемой @react-three/fiber. Рендерит 3D-объекты из состояния. Поддерживает визуализацию искаженной сетки координат для произвольных базисов (Passive View).</Description>
                 <API>&lt;ThreeCanvas /&gt;</API>
             </Component>
             <Component id="ObjectDrawer">
@@ -153,6 +153,7 @@
                 <Property name="start" type="[number, number, number]"/>
                 <Property name="end" type="[number, number, number]"/>
                 <Property name="components" type="[number, number, number]" description="Кешированное значение (end - start) для оптимизации вычислений и рендеринга."/>
+                <Property name="derivation" type="{ type: 'cross_product' | 'other', operands: [string, string] }" description="Metadata about how the vector was created, used for context-aware visualization."/>
             </Properties>
         </Model>
         <Model name="Matrix" inherits="SceneObject">
@@ -173,6 +174,7 @@
                 <Property name="multiSelection" type="string[]" description="IDs of multiple selected objects"/>
                 <Property name="mode" type="'select' | 'addVector' | 'transform' | 'changeBasis'"/>
                 <Property name="isProjectionExplorerActive" type="boolean"/>
+                <Property name="isDualSpaceVisible" type="boolean" defaultValue="false" description="Toggle for rendering covectors (dual space visualization)."/>
                 <Property name="viewMode" type="'2d' | '3d'" defaultValue="'2d'"/>
                 <Property name="basisVectorIds" type="string[]"/>
                 <Property name="cameraState" type="{ position, target }"/>

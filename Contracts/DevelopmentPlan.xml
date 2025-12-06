@@ -87,6 +87,10 @@
                 <Description>Flips the boolean value of isProjectionExplorerActive.</Description>
             </Action>
 
+            <Action name="toggleDualSpace">
+                <Description>Flips the boolean value of isDualSpaceVisible.</Description>
+            </Action>
+
             <Action name="setViewMode">
                 <Description>Устанавливает режим отображения (2D или 3D).</Description>
                 <Input>
@@ -233,6 +237,44 @@
                 <Type>THREE.Line</Type>
             </Output>
         </Function>
+        <Function name="drawBasisGrid">
+            <Description>Creates a grid helper aligned with the provided basis vectors. Used for Passive Basis visualization.</Description>
+            <Input>
+                <Parameter name="basis" type="Vector[]"/>
+            </Input>
+            <Output>
+                <Type>THREE.Object3D</Type>
+            </Output>
+        </Function>
+        <Function name="drawBasisAxes">
+            <Description>Creates visual axes representing the new basis directions.</Description>
+            <Input>
+                <Parameter name="basis" type="Vector[]"/>
+            </Input>
+            <Output>
+                <Type>THREE.Object3D</Type>
+            </Output>
+        </Function>
+        <Function name="drawCovector">
+            <Description>Visualizes the dual of a vector (covector) as a stack of parallel planes/lines perpendicular to the vector. Spacing is 1/||v||.</Description>
+            <Input>
+                <Parameter name="vector" type="Vector"/>
+            </Input>
+            <Output>
+                <Type>THREE.Group | JSX.Element[]</Type>
+            </Output>
+        </Function>
+        <Function name="drawCrossProductVisuals">
+            <Description>Renders visual hints for cross product: a spanned parallelogram and an orientation arc.</Description>
+            <Input>
+                <Parameter name="resultVector" type="Vector"/>
+                <Parameter name="operandA" type="Vector"/>
+                <Parameter name="operandB" type="Vector"/>
+            </Input>
+            <Output>
+                <Type>THREE.Group</Type>
+            </Output>
+        </Function>
 
         <FilePath>src/rendering/KonvaDrawer.ts</FilePath>
         <Description>Содержит функции для отрисовки математических объектов в 2D-сцене Konva.</Description>
@@ -290,12 +332,13 @@
                     <PossibleReturns>
                         <Return status="Success" details="Возвращает собственные векторы и значения" payload="{ eigenvectors: number[][], eigenvalues: number[] }"/>
                         <Return status="NotSquareMatrix" details="Матрица не является квадратной" payload="null"/>
+                        <Return status="ComplexEigenvalues" details="Собственные значения являются комплексными (например, для матрицы поворота)" payload="null"/>
                         <Return status="ComputationFailed" details="Вычисление не удалось" payload="null"/>
                     </PossibleReturns>
                 </Output>
             </Method>
             <Method name="checkLinearDependency">
-                <Description>Проверяет набор векторов на линейную зависимость. Возвращает true, если векторы зависимы. Проверка должна выполняться путем составления матрицы из компонент векторов и вычисления ее ранга. Если ранг меньше количества векторов, они линейно зависимы.</Description>
+                <Description>Проверяет набор векторов на линейную зависимость. Использует метод Гаусса для приведения матрицы (где столбцы — это векторы) к ступенчатому виду и вычисления ранга. Возвращает true, если Rank меньше количества векторов.</Description>
                 <Input>
                     <Parameter name="vectors" type="Vector[]"/>
                 </Input>

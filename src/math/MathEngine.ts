@@ -1,8 +1,9 @@
 import { vec3 } from 'gl-matrix';
 import type { Vector, Matrix, Point } from '../store/mainStore';
-import { create, all, type MathJsStatic } from 'mathjs';
+import { create, all, type MathJsStatic, type MathType } from 'mathjs';
 
 const math = create(all) as MathJsStatic;
+math.config({ number: 'number' }); // Ensure number type is 'number'
 
 type Success<T> = { status: "Success"; payload: T; };
 type Failure = { status: string; payload: null; };
@@ -58,7 +59,7 @@ export const MathEngine = {
                 ...m1, id: crypto.randomUUID(), name: 'Product', values: result_values,
             };
             return { status: "Success", payload: resultMatrix };
-        } catch (_e) {
+        } catch (_) {
             return { status: "ComputationFailed", payload: null };
         }
     },
@@ -71,7 +72,7 @@ export const MathEngine = {
             const inverted_values = math.inv(m.values);
             const resultMatrix: Matrix = { ...m, id: crypto.randomUUID(), name: 'Inverse', values: inverted_values };
             return { status: "Success", payload: resultMatrix };
-        } catch (_e) {
+        } catch (_) {
             return { status: "Singular", payload: null };
         }
     },
@@ -81,55 +82,110 @@ export const MathEngine = {
             return { status: "NotSquareMatrix", payload: null };
         }
         try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const result: any = math.eigs(matrix.values);
-            // Math.js may return complex numbers, we need to handle this
-            const eigenvalues = Array.isArray(result.values)
+            const eigenResult = math.eigs(matrix.values);
+
+            // Ensure values is an array of (number | math.Complex)
+            const mapToNumOrComplex = (val: MathType): number | math.Complex => {
+                if (math.isComplex(val)) return val;
+                if (math.isBigNumber(val)) return val.toNumber();
+                if (math.isFraction(val)) return val.valueOf() as number; // Convert fraction to number and cast
+                if (math.isUnit(val)) return val.value as number; // Extract value from unit
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                ? result.values.map((v: any) => (typeof v === 'object' && 're' in v && typeof v.re === 'number' ? v.re : v as number))
-                : [];
-            const eigenvectors = Array.isArray(result.eigenvectors)
+                return math.number(val as any) as number; // Fallback for other MathTypes to number and cast
+            };
+
+            const rawValues = math.isMatrix(eigenResult.values) ? eigenResult.values.toArray() : eigenResult.values;
+            const values: (number | math.Complex)[] = Array.isArray(rawValues) 
+                ? rawValues.map(mapToNumOrComplex)
+                : [mapToNumOrComplex(rawValues)];
+
+            const rawEigenvectorsCollection = math.isMatrix(eigenResult.eigenvectors) ? eigenResult.eigenvectors.toArray() : eigenResult.eigenvectors;
+            const eigenvectors: (number | math.Complex)[][] = Array.isArray(rawEigenvectorsCollection)
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                ? result.eigenvectors.map((vec: any) =>
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    Array.isArray(vec) ? vec.map((v: any) => (typeof v === 'object' && 're' in v && typeof v.re === 'number' ? v.re : v as number)) : vec
-                )
-                : [];
-            return { status: "Success", payload: { eigenvalues, eigenvectors } };
-        } catch (error) {
+                ? rawEigenvectorsCollection.map((item: any) => { // item could be an object {value, vector} or a MathType[]
+                    const vectorArray = item.vector ? (math.isMatrix(item.vector) ? item.vector.toArray() : item.vector) : item;
+                    return Array.isArray(vectorArray) ? vectorArray.map(mapToNumOrComplex) : [mapToNumOrComplex(vectorArray)];
+                })
+                : [[mapToNumOrComplex(rawEigenvectorsCollection)]];
+
+            // Check for complex eigenvalues
+            const hasComplex = values.some((v) => 
+                typeof v === 'object' && 'im' in v && Math.abs((v as math.Complex).im) > 1e-10
+            );
+
+            if (hasComplex) {
+                return { status: "ComplexEigenvalues", payload: null };
+            }
+
+            // Math.js may return complex numbers with 0 imaginary part, we need to handle this
+            const eigenvalues = values.map((v) => (typeof v === 'object' && 're' in v && typeof (v as math.Complex).re === 'number' ? (v as math.Complex).re : v as number));
+            const eigenvectorsAsNumbers = eigenvectors.map((vec) =>
+                vec.map((v: number | math.Complex) => (typeof v === 'object' && 're' in v && typeof (v as math.Complex).re === 'number' ? (v as math.Complex).re : v as number))
+            );
+            return { status: "Success", payload: { eigenvalues, eigenvectors: eigenvectorsAsNumbers } };
+        } catch (_) {
             return { status: "ComputationFailed", payload: null };
         }
     },
 
     checkLinearDependency: (vectors: Vector[]): boolean => {
         if (vectors.length === 0) return false;
-        // For now, a simple check for collinearity in 2D/3D
-        if (vectors.length === 1) return false; // Single vector is always independent
-        if (vectors.length === 2) {
-            // Check if two vectors are scalar multiples of each other
-            const v1 = vectors[0].components;
-            const v2 = vectors[1].components;
+        
+        const numVectors = vectors.length;
+        const dimension = vectors[0].components.length;
 
-            // Simple approach: check if one is a scalar multiple of the other
-            let ratio: number | null = null;
-            for (let i = 0; i < v1.length; i++) {
-                if (Math.abs(v1[i]) > 1e-10) { // v1[i] is non-zero
-                    if (Math.abs(v2[i]) < 1e-10) return false; // v2[i] is zero but v1[i] is not
-                    const currentRatio = v2[i] / v1[i];
-                    if (ratio === null) {
-                        ratio = currentRatio;
-                    } else if (Math.abs(currentRatio - ratio) > 1e-10) {
-                        return false; // Ratios don't match
-                    }
-                } else if (Math.abs(v2[i]) > 1e-10) {
-                    return false; // v1[i] is zero but v2[i] is not
-                }
-                // If both are zero, continue
+        // If we have more vectors than dimensions, they must be dependent
+        if (numVectors > dimension) return true;
+
+        // Construct matrix where vectors are columns
+        // Matrix dimensions: [dimension x numVectors]
+        const matrix: number[][] = [];
+        for (let i = 0; i < dimension; i++) {
+            matrix[i] = [];
+            for (let j = 0; j < numVectors; j++) {
+                matrix[i][j] = vectors[j].components[i];
             }
-            return ratio !== null; // Linearly dependent if a consistent ratio exists
         }
-        // For now, just return false for cases with more than 2 vectors
-        return false;
+
+        // Gaussian elimination to Row Echelon Form
+        let pivotRow = 0;
+        const numRows = dimension;
+        const numCols = numVectors;
+
+        for (let col = 0; col < numCols && pivotRow < numRows; col++) {
+            // Find pivot in this column
+            let maxRow = pivotRow;
+            for (let i = pivotRow + 1; i < numRows; i++) {
+                if (Math.abs(matrix[i][col]) > Math.abs(matrix[maxRow][col])) {
+                    maxRow = i;
+                }
+            }
+
+            // If pivot is zero (or close to it), this column adds no rank
+            if (Math.abs(matrix[maxRow][col]) < 1e-10) {
+                continue;
+            }
+
+            // Swap rows
+            [matrix[pivotRow], matrix[maxRow]] = [matrix[maxRow], matrix[pivotRow]];
+
+            // Eliminate rows below
+            for (let i = pivotRow + 1; i < numRows; i++) {
+                const factor = matrix[i][col] / matrix[pivotRow][col];
+                // Optimized: Start from 'col' as previous entries are zero
+                for (let j = col; j < numCols; j++) {
+                    matrix[i][j] -= factor * matrix[pivotRow][j];
+                }
+            }
+
+            pivotRow++;
+        }
+
+        // The rank is the number of non-zero rows (which equals pivotRow count here)
+        const rank = pivotRow;
+
+        // If Rank < Number of Vectors, they are linearly dependent
+        return rank < numVectors;
     },
 
     applyTransformToObject: (object: Vector | Point, matrix: Matrix): Response<Vector | Point> => {
@@ -244,7 +300,7 @@ export const MathEngine = {
             }
 
             return { status: "Success", payload: solution };
-        } catch (_e) {
+        } catch (_) {
             return { status: "InvalidBasis", payload: null };
         }
     },
@@ -255,7 +311,7 @@ export const MathEngine = {
             // Implementation of null space calculation would go here
             // For now, returning empty array as a placeholder
             return { status: "Success", payload: [] };
-        } catch (_e) {
+        } catch (_) {
             return { status: "Success", payload: [] }; // Or a failure response
         }
     },
@@ -266,7 +322,7 @@ export const MathEngine = {
         try {
             // Placeholder implementation until nullSpace function is properly available
             return { status: "Success", payload: [] };
-        } catch (_e) {
+        } catch (_) {
             return { status: "Success", payload: [] };
         }
     },
@@ -288,7 +344,7 @@ export const MathEngine = {
             // }));
             // return { status: "Success", payload: basisVectors };
             return { status: "Success", payload: [] };
-        } catch (_e) {
+        } catch (_) {
             return { status: "ComputationFailed", payload: null };
         }
     },

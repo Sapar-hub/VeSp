@@ -56,17 +56,19 @@ const separatorStyle: React.CSSProperties = {
 
 export const Toolbar: React.FC = () => {
     const {
-        createObject,
         setMode,
         mode,
         visualizationMode,
-        setVisualizationMode
+        setVisualizationMode,
+        isDualSpaceVisible,
+        toggleDualSpace
     } = useStore(state => ({
-        createObject: state.createObject,
         setMode: state.setMode,
         mode: state.mode,
         visualizationMode: state.visualizationMode,
         setVisualizationMode: state.setVisualizationMode,
+        isDualSpaceVisible: state.isDualSpaceVisible,
+        toggleDualSpace: state.toggleDualSpace,
     }));
 
     const { isAuthenticated, user, logout } = useAuth();
@@ -79,15 +81,15 @@ export const Toolbar: React.FC = () => {
         color: mode === buttonMode ? '#ffffff' : '#e0e0e0',
     });
 
+    const getDualSpaceButtonStyle = () => ({
+        ...buttonStyle,
+        background: isDualSpaceVisible ? '#007bff' : 'transparent',
+        color: isDualSpaceVisible ? '#ffffff' : '#e0e0e0',
+    });
+
     return (
         <>
             <div style={toolbarStyle}>
-                <button style={buttonStyle} onMouseOver={e => e.currentTarget.style.background = '#4a4a4a'} onMouseOut={e => e.currentTarget.style.background = 'transparent'} onClick={() => createObject('vector')}>
-                    + Vector
-                </button>
-                <button style={buttonStyle} onMouseOver={e => e.currentTarget.style.background = '#4a4a4a'} onMouseOut={e => e.currentTarget.style.background = 'transparent'} onClick={() => createObject('matrix')}>
-                    + Matrix
-                </button>
                 <div style={separatorStyle}></div>
                 <button style={getButtonStyle('select')} onClick={() => setMode('select')}>
                     Select
@@ -106,6 +108,9 @@ export const Toolbar: React.FC = () => {
                 </select>
                 <div style={separatorStyle}></div>
                 <ProjectionModeToggle />
+                <button style={getDualSpaceButtonStyle()} onClick={toggleDualSpace} title="Show Dual Space (Covectors)">
+                    Dual Space
+                </button>
                 <ViewModeToggle />
                 {isAuthenticated && (
                     <>

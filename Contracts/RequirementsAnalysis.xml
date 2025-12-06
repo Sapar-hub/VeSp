@@ -142,8 +142,7 @@
         <Action>
             <Verb>Вычисляет векторное произведение</Verb>
             <Details>
-                <Parameter name="VectorA_ID">Идентификатор первого вектора</Parameter>
-                <Parameter name="VectorB_ID">Идентификатор второго вектора</Parameter>
+                <Parameter name="Expression">Выражение с использованием `*` (например, `c = a * b`)</Parameter>
             </Details>
         </Action>
         <Goal>
@@ -151,30 +150,51 @@
             <Output>
                 <Status>CrossProductCalculated</Status>
                 <CrossProductVector>Результирующий вектор</CrossProductVector>
-                <OrientationHint>Подсказка правила правой руки</OrientationHint>
-                <PlaneHighlight>Подсвеченная плоскость исходных векторов</PlaneHighlight>
+                <OrientationHint>Дуговая стрелка от первого ко второму операнду</OrientationHint>
+                <PlaneHighlight>Параллелограмм, натянутый на операнды</PlaneHighlight>
             </Output>
         </Goal>
     </Scenario>
 
     <Scenario id="SCN_008">
-        <Description>Пользователь переключается на новый базис и видит пересчёт координат.</Description>
+        <Description>Пользователь переключается на новый базис и видит пересчёт координат в пассивном режиме.</Description>
         <Actor type="Student">
             <Name>Студент или любитель математики</Name>
         </Actor>
         <Action>
             <Verb>Переключает базис</Verb>
             <Details>
-                <Parameter name="NewBasisVectors">Список векторов нового базиса</Parameter>
+                <Parameter name="Script">Скрипт, определяющий переменные `x`, `y`, `z`</Parameter>
             </Details>
         </Action>
         <Goal>
-            <Description>Увидеть, как объекты пересчитываются в новой системе координат</Description>
+            <Description>Увидеть, как сетка координат искажается под новый базис (Smart Grid), а геометрический вектор остается на месте</Description>
             <Output>
                 <Status>BasisChanged</Status>
-                <CoordinateTransform>Новые координаты объектов</CoordinateTransform>
-                <AxisReorientation>Переориентация осей</AxisReorientation>
-                <GridAdaptation>Адаптация сетки под новый базис</GridAdaptation>
+                <CoordinateTransform>Числовые значения координат векторов обновлены (Contravariant)</CoordinateTransform>
+                <GridTransformation>Сетка искажается (Passive View) если базис не стандартный</GridTransformation>
+                <VectorInvariant>Геометрическое положение векторов на экране не изменилось</VectorInvariant>
+            </Output>
+        </Goal>
+    </Scenario>
+
+    <Scenario id="SCN_021">
+        <Description>Пользователь включает отображение двойственного пространства (Dual Space).</Description>
+        <Actor type="Student">
+            <Name>Студент или любитель математики</Name>
+        </Actor>
+        <Action>
+            <Verb>Включает режим Dual Space</Verb>
+            <Details>
+                <Parameter name="Toggle">Кнопка в панели инструментов</Parameter>
+            </Details>
+        </Action>
+        <Goal>
+            <Description>Визуализировать ковекторы как наборы параллельных плоскостей/линий</Description>
+            <Output>
+                <Status>DualSpaceVisible</Status>
+                <CovectorVisualization>Стопка полупрозрачных плоскостей, перпендикулярных выбранному вектору</CovectorVisualization>
+                <Density>Плотность плоскостей обратно пропорциональна длине вектора</Density>
             </Output>
         </Goal>
     </Scenario>

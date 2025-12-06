@@ -20,6 +20,10 @@ export interface Vector extends SceneObject {
     start: [number, number, number];
     end: [number, number, number];
     components: [number, number, number]; // Cached value (end - start)
+    derivation?: {
+        type: 'cross_product' | 'other';
+        operands: [string, string]; // Names or IDs of the operands
+    };
 }
 
 export interface Point extends SceneObject {
@@ -50,6 +54,7 @@ export interface AppState {
     basisVectorIds: string[];
     cameraState: { position: [number, number, number], target: [number, number, number] };
     visualizationMode: 'none' | 'tip-to-tail' | 'parallelogram';
+    isDualSpaceVisible: boolean;
     tempObjects: SceneObjectUnion[];
     notifications: Notification[];
     expressions: string;
@@ -66,6 +71,7 @@ export interface Actions {
     setMode: (mode: 'select' | 'addVector' | 'transform' | 'changeBasis') => void;
     applySceneTransform: (transformMatrix: Matrix) => void;
     toggleProjectionExplorer: () => void;
+    toggleDualSpace: () => void;
     setViewMode: (mode: '2d' | '3d') => void;
     setBasis: (basisVectorIds: string[]) => void;
     addNotification: (message: string, type: 'success' | 'error' | 'info') => void;
@@ -112,13 +118,14 @@ const useStore = create<AppState & Actions>()(
                 multiSelection: [],
                 mode: 'select',
                 isProjectionExplorerActive: false,
+                isDualSpaceVisible: false,
                 viewMode: '2d',
                 basisVectorIds: [],
                 cameraState: { position: [5, 5, 10], target: [0, 0, 0] },
                 visualizationMode: 'tip-to-tail',
                 tempObjects: [],
                 notifications: [],
-                expressions: 'a = [2, 0]\nb = [0, 2]\nc = a + b',
+                expressions: 'x = [1, 0, 0]\ny = [0, 1, 0]\nz = [0, 0, 1]\nv = x + y',
                 expressionErrors: new Map(),
 
                 // --- ACTIONS IMPLEMENTATION ---
@@ -131,21 +138,36 @@ const useStore = create<AppState & Actions>()(
                     const { newObjects, tempObjects, errors } = ExpressionEngine.evaluate(expressions, objects, visualizationMode);
 
                     set(produce(state => {
-                        // const expressionNames = new Set(
-                        //     expressions.split('\n').map(line => line.match(/^([a-zA-Z_][a-zA-Z_0-9]*)\s*=/)).filter(Boolean).map(m => m![1])
-                        // );
-
-                        // Re-evaluate all objects from the script
-                        const newObjectsMap = new Map<string, SceneObjectUnion>();
-
-                        // Add the newly evaluated objects
+                        // Merge newly evaluated objects into the existing state
+                        // This ensures we update existing ones (like 'a' or 'b' if they changed)
+                        // and add new ones (like 'c') without deleting everything else.
                         for (const [id, obj] of newObjects.entries()) {
-                            newObjectsMap.set(id, obj);
+                            state.objects.set(id, obj);
                         }
 
-                        state.objects = newObjectsMap;
                         state.tempObjects = tempObjects;
                         state.expressionErrors = errors;
+
+                        // Auto-detect basis from variables named 'x', 'y', 'z'
+                        const basisNames = ['x', 'y', 'z'];
+                        const potentialBasis: string[] = [];
+                        
+                        // We scan the updated state.objects map
+                        for (const [id, obj] of state.objects.entries()) {
+                            if (obj.type === 'vector' && basisNames.includes(obj.name)) {
+                                // Ensure we preserve order x, y, z
+                                const index = basisNames.indexOf(obj.name);
+                                potentialBasis[index] = id;
+                            }
+                        }
+
+                        // Filter out empty slots (e.g. if z is missing)
+                        const finalBasis = potentialBasis.filter(Boolean);
+
+                        // If we found at least 2 basis vectors (x, y), update the basis
+                        if (finalBasis.length >= 2) {
+                             state.basisVectorIds = finalBasis;
+                        }
                     }));
                 },
                 createObject: (type, properties) => {
@@ -273,6 +295,10 @@ const useStore = create<AppState & Actions>()(
 
                 toggleProjectionExplorer: () => {
                     set(state => ({ isProjectionExplorerActive: !state.isProjectionExplorerActive }));
+                },
+
+                toggleDualSpace: () => {
+                    set(state => ({ isDualSpaceVisible: !state.isDualSpaceVisible }));
                 },
 
                 setViewMode: (mode) => {
@@ -416,7 +442,7 @@ const useStore = create<AppState & Actions>()(
             }),
             {
                 partialize: (state) => {
-                    const { notifications: _notifications, tempObjects: _tempObjects, ...rest } = state;
+                    const { notifications: _, tempObjects: __, ...rest } = state;
                     return rest;
                 },
             }

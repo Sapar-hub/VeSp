@@ -12,12 +12,14 @@ function isVector(object: SceneObjectUnion): object is Vector {
 }
 
 const Scene: React.FC<{ inputController: InputController | null }> = ({ inputController }) => {
-    const { objects, selectedObjectId, multiSelection, isProjectionExplorerActive, tempObjects } = useStore(state => ({
+    const { objects, selectedObjectId, multiSelection, isProjectionExplorerActive, tempObjects, basisVectorIds, isDualSpaceVisible } = useStore(state => ({
         objects: state.objects,
         selectedObjectId: state.selectedObjectId,
         multiSelection: state.multiSelection,
         isProjectionExplorerActive: state.isProjectionExplorerActive,
         tempObjects: state.tempObjects,
+        basisVectorIds: state.basisVectorIds,
+        isDualSpaceVisible: state.isDualSpaceVisible,
     }));
     const { scene, camera } = useThree();
 
@@ -28,11 +30,39 @@ const Scene: React.FC<{ inputController: InputController | null }> = ({ inputCon
         }
     }, [inputController, scene, camera]);
 
+    const basisVectors = React.useMemo(() => {
+        return basisVectorIds.map(id => objects.get(id)).filter((v): v is Vector => v?.type === 'vector');
+    }, [basisVectorIds, objects]);
+
+    // Check if the current basis is the standard basis (Identity)
+    const isStandardBasis = React.useMemo(() => {
+        if (basisVectors.length < 3) return false; // 3D Standard basis needs 3 vectors
+        
+        const x = basisVectors[0].components;
+        const y = basisVectors[1].components;
+        const z = basisVectors[2].components;
+
+        const isIdentity = (v: [number, number, number], target: [number, number, number]) => 
+            Math.abs(v[0] - target[0]) < 0.001 &&
+            Math.abs(v[1] - target[1]) < 0.001 &&
+            Math.abs(v[2] - target[2]) < 0.001;
+
+        return isIdentity(x, [1, 0, 0]) && isIdentity(y, [0, 1, 0]) && isIdentity(z, [0, 0, 1]);
+    }, [basisVectors]);
+
     return (
         <>
             <ambientLight intensity={0.6} />
             <directionalLight position={[10, 10, 5]} intensity={1.5} />
-            <Grid args={[100, 100]} infiniteGrid fadeDistance={50} />
+            
+            {!isStandardBasis && basisVectors.length > 0 ? (
+                <>
+                    <primitive object={ObjectDrawer.drawBasisGrid(basisVectors)} />
+                    <primitive object={ObjectDrawer.drawBasisAxes(basisVectors)} />
+                </>
+            ) : (
+                <Grid args={[100, 100]} infiniteGrid fadeDistance={50} />
+            )}
 
             {Array.from(objects.values()).map(obj => {
                 if (!obj.visible) return null;
@@ -40,6 +70,17 @@ const Scene: React.FC<{ inputController: InputController | null }> = ({ inputCon
                 switch (obj.type) {
                     case 'vector': {
                         const vec = ObjectDrawer.drawVector(obj);
+                        let crossProductVisuals = null;
+
+                        if (obj.derivation?.type === 'cross_product') {
+                            const opA = Array.from(objects.values()).find(o => o.name === obj.derivation!.operands[0]) as Vector;
+                            const opB = Array.from(objects.values()).find(o => o.name === obj.derivation!.operands[1]) as Vector;
+                            
+                            if (opA && opB) {
+                                crossProductVisuals = <primitive object={ObjectDrawer.drawCrossProductVisuals(obj, opA, opB)} />;
+                            }
+                        }
+
                         if (isSelected) {
                             const arrow = vec.children[0] as THREE.Mesh;
                             if (arrow.material && Array.isArray(arrow.material)) {
@@ -57,7 +98,13 @@ const Scene: React.FC<{ inputController: InputController | null }> = ({ inputCon
                                 }
                             }
                         }
-                        return <primitive key={obj.id} object={vec} />;
+                        return (
+                            <React.Fragment key={obj.id}>
+                                <primitive object={vec} />
+                                {crossProductVisuals}
+                                {isDualSpaceVisible && isSelected && <primitive object={ObjectDrawer.drawCovector(obj)} />}
+                            </React.Fragment>
+                        );
                     }
                     case 'point': {
                         const point = ObjectDrawer.drawPoint(obj);
@@ -92,7 +139,7 @@ const Scene: React.FC<{ inputController: InputController | null }> = ({ inputCon
 };
 
 export const ThreeCanvas: React.FC = () => {
-    const [inputController] = useState(() => new InputController(useStore));
+    const [inputController] = useState(() => new InputController(useStore.getState));
 
     const canvasContainerStyle: React.CSSProperties = {
         position: 'absolute',
