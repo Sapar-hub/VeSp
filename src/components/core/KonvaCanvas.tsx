@@ -126,7 +126,7 @@ export const KonvaCanvas: React.FC = () => {
                     {!isStandardBasis && basisVectors.length > 0 ? (
                         <>
                             {drawBasisGrid(basisVectors)}
-                            {drawBasisAxes(basisVectors)}
+                            {drawBasisAxes(basisVectors, stageState.scale)}
                         </>
                     ) : (
                         drawGridAndAxes(window.innerWidth, window.innerHeight, stageState.scale, stageState.x, stageState.y)
@@ -141,16 +141,16 @@ export const KonvaCanvas: React.FC = () => {
 
                                 return (
                                     <React.Fragment key={obj.id}>
-                                        {drawSceneObject(obj, isSelected, isDraggable, handleDragEnd)}
+                                        {drawSceneObject(obj, isSelected, stageState.scale, isDraggable, handleDragEnd)}
                                         {isDualSpaceVisible && isSelected && drawCovector(obj)}
                                     </React.Fragment>
                                 );
                             }
 
                             const isSelected = selectedObjectId === obj.id || multiSelection.includes(obj.id);
-                            return drawSceneObject(obj, isSelected);
+                            return drawSceneObject(obj, isSelected, stageState.scale);
                         })}
-                    {tempObjects.map(obj => drawSceneObject(obj, false, false))}
+                    {tempObjects.map(obj => drawSceneObject(obj, false, stageState.scale, false))}
                 </Layer>
             </Stage>
         </div>

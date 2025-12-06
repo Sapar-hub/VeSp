@@ -73,12 +73,13 @@ export function drawGridAndAxes(
 export function drawSceneObject(
     obj: SceneObjectUnion,
     isSelected: boolean,
+    scale: number,
     isDraggable: boolean = false,
     onDragEnd?: (e: Konva.KonvaEventObject<DragEvent>) => void
 ) {
     switch (obj.type) {
         case 'vector':
-            return drawVector(obj, isSelected, isDraggable, onDragEnd);
+            return drawVector(obj, isSelected, scale, isDraggable, onDragEnd);
         case 'point':
             return drawPoint(obj, isSelected);
         default:
@@ -89,6 +90,7 @@ export function drawSceneObject(
 function drawVector(
     vector: Vector,
     isSelected: boolean,
+    scale: number,
     isDraggable: boolean,
     onDragEnd?: (e: Konva.KonvaEventObject<DragEvent>) => void
 ) {
@@ -135,8 +137,8 @@ function drawVector(
             ) : (
                 <Arrow
                     points={[0, 0, scaledComponents[0], scaledComponents[1]]}
-                    pointerLength={10}
-                    pointerWidth={10}
+                    pointerLength={10 / scale}
+                    pointerWidth={10 / scale}
                     fill={isSelected ? '#007bff' : color}
                     stroke={isSelected ? '#007bff' : color}
                     strokeWidth={isSelected ? 3 : 2}
@@ -162,7 +164,7 @@ function drawPoint(point: Point, isSelected: boolean) {
     );
 }
 
-export function drawBasisAxes(basis: Vector[]): JSX.Element[] {
+export function drawBasisAxes(basis: Vector[], scale: number): JSX.Element[] {
     const axes: JSX.Element[] = [];
     const colors = ['#FF0000', '#00FF00', '#0000FF']; // Red, Green, Blue for x, y, z
 
@@ -174,8 +176,8 @@ export function drawBasisAxes(basis: Vector[]): JSX.Element[] {
             <Arrow
                 key={`basis-axis-${b.id}`}
                 points={[0, 0, scaledComponents[0], scaledComponents[1]]}
-                pointerLength={10}
-                pointerWidth={10}
+                pointerLength={10 / scale}
+                pointerWidth={10 / scale}
                 fill={color}
                 stroke={color}
                 strokeWidth={3}

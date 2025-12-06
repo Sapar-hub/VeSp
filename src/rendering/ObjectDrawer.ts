@@ -444,10 +444,8 @@ export function drawCrossProductVisuals(_resultVector: Vector, operandA: Vector,
         const arrowHeadLength = arcRadius * 0.3; // Make arrowhead length proportional to arc radius
         const arrowHeadWidth = arcRadius * 0.15;
 
-        // Position the arrowhead such that its tip is precisely at 'lastArcPoint'.
-        // The origin of the ArrowHelper should be offset backwards along its direction
-        // by the length of the arrowhead.
-        const arrowOrigin = lastArcPoint.clone().sub(arrowDirection.clone().multiplyScalar(arrowHeadLength));
+        // Position the arrowhead such that its base is precisely at 'lastArcPoint'.
+        const arrowOrigin = lastArcPoint.clone();
 
         // Create an ArrowHelper with stemLength 0, so only the head is drawn.
         const arrowHelper = new THREE.ArrowHelper(arrowDirection, arrowOrigin, 0, arcColor, arrowHeadLength, arrowHeadWidth);
