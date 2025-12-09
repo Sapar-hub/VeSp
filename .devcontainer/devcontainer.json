@@ -5,7 +5,7 @@
   "service": "api",
   "workspaceFolder": "/workspace",
   "forwardPorts": [5173, 3000, 5433],
-  "postCreateCommand": "cd /workspace/backend && npm install && cd /workspace && npm install",
+  "postCreateCommand": "cd /workspaces/VeSp && npm install && cd /workspaces/VeSp && npm install",
   "customizations": {
     "vscode": {
       "extensions": [
