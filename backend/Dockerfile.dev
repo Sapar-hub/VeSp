@@ -3,6 +3,9 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Ensure /workspace exists
+RUN mkdir -p /workspace
+
 # Copy package files and install deps
 COPY package*.json ./
 RUN npm install
