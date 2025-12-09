@@ -2,10 +2,10 @@
 {
   "name": "VectorSpace Dev",
   "dockerComposeFile": "../docker-compose.yml",
-  "service": "api",  // or "db" — doesn't matter much; we run frontend outside containers
+  "service": "api",
   "workspaceFolder": "/workspace",
   "forwardPorts": [5173, 3000, 5433],
-  "postCreateCommand": "cd backend && npm install && cd .. && npm install",
+  "postCreateCommand": "cd /workspace/backend && npm install && cd /workspace && npm install",
   "customizations": {
     "vscode": {
       "extensions": [
