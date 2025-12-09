@@ -3,7 +3,7 @@
   "name": "VectorSpace Dev",
   "dockerComposeFile": "../docker-compose.yml",
   "service": "api",
-  "workspaceFolder": "/workspace",
+  "workspaceFolder": "/workspaces/VeSp",
   "forwardPorts": [5173, 3000, 5433],
   "postCreateCommand": "cd /workspaces/VeSp && npm install && cd /workspaces/VeSp && npm install",
   "customizations": {
