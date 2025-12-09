@@ -1,27 +1,24 @@
-# Use Node.js LTS (Alpine for smaller size)
+# backend/Dockerfile.dev
 FROM node:20-alpine
 
-# Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files and install deps
 COPY package*.json ./
-
-# Install dependencies
 RUN npm install
+
+# Install Prisma CLI globally (optional but helpful)
+RUN npm install -g prisma
 
 # Copy Prisma schema and generate client
 COPY prisma ./prisma/
 RUN npx prisma generate
 
-# Copy source code
+# Copy source code (will be overridden by volume mount, but needed for initial setup)
 COPY . .
 
-# Build TypeScript code
-RUN npm run build
-
-# Expose API port
+# Expose port
 EXPOSE 3000
 
-# Command to run the app
-CMD ["npm", "start"]
+# Run in development mode — will be called by docker-compose
+CMD ["npm", "run", "dev"]
