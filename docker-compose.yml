@@ -1,7 +1,7 @@
+# docker-compose.yml
 version: '3.8'
 
 services:
-  # PostgreSQL Database
   db:
     image: postgres:16-alpine
     container_name: vector-space-db
@@ -11,11 +11,10 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
       POSTGRES_DB: ${DB_NAME:-vectorspace}
     ports:
-      - "5433:5432"
+      - "5433:5432"  # Expose DB externally (optional, for tools like pgAdmin)
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  # Backend API (Node.js) - configured for development
   api:
     build:
       context: ./backend
@@ -32,19 +31,8 @@ services:
       - db
     volumes:
       - ./backend:/app
+      - /app/node_modules  # Prevent node_modules overwrite
     command: npm run dev
-
-  # Frontend (React + Nginx)
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: vector-space-frontend
-    restart: always
-    ports:
-      - "8080:80"
-    depends_on:
-      - api
 
 volumes:
   postgres_data:

@@ -1,0 +1,19 @@
+// .devcontainer/devcontainer.json
+{
+  "name": "VectorSpace Dev",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "api",  // or "db" — doesn't matter much; we run frontend outside containers
+  "workspaceFolder": "/workspace",
+  "forwardPorts": [5173, 3000, 5433],
+  "postCreateCommand": "cd backend && npm install && cd .. && npm install",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.vscode-typescript-next",
+        "ms-azuretools.vscode-docker",
+        "dbaeumer.vscode-eslint",
+        "bradlc.vscode-tailwindcss"
+      ]
+    }
+  }
+}
