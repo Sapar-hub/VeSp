@@ -1,5 +1,7 @@
 # Vector Space
 
+Hi there! Even though the "project" and technical stack was created by AI this one paragraph is human-text as you can guess by the way of presenting this information. Nevertheless project was created due to the home assignment and out of my personal curiousity to try to make a "universal" interactive sandboxing tool to visually feel the abstract world of mathematics and Linear Algebra as it is the heart of the tool that actually built whole project. I do get that there are a lot of tools, CAS systems, frameworks that actually do even better, personally I couldn't find any alikes.
+
 ## Overview
 Vector Space is an interactive web application designed to visualize and manipulate mathematical objects like vectors, matrices, and points in 2D and 3D space. It provides a dynamic environment for exploring linear algebra concepts, performing transformations, and understanding coordinate systems through an intuitive user interface. Users can define expressions using a custom mathematical syntax, which the application evaluates to render objects and their relationships.
 
@@ -11,18 +13,11 @@ Vector Space is an interactive web application designed to visualize and manipul
 - **Projection Explorer:** Explore projections and their effects on objects.
 - **Notifications:** Real-time feedback on operations and errors.
 
-## GRACE Methodology
+## Software Development
 This project adheres to the **GRACE** methodology for software development, emphasizing a **Contract-First** approach. This means that architectural decisions and component interfaces are meticulously defined through formal XML contracts (specifically `Architecture.xml`, `DevelopmentPlan.xml`, and `RequirementsAnalysis.xml`) *before* implementation begins. This strategy is crucial for:
 -   **Preventing "Big Ball of Mud"**: By establishing clear boundaries and responsibilities early, we avoid an unstructured and unmanageable codebase.
 -   **Mitigating "Architectural Drift"**: The contracts serve as a single source of truth, ensuring that implementation remains aligned with the intended design and preventing deviations over time.
 -   **Formal Verification**: Adherence to these contracts provides a form of formal verification, ensuring the system's components integrate as designed and fulfill their specified roles, directly referencing principles discussed in software architecture lectures.
-
-The pillars of GRACE are:
-- **G**oal-oriented development
-- **R**eusable components
-- **A**gile practices
-- **C**lean architecture
-- **E**volving design
 
 ## Tech Stack
 ### Frontend
@@ -139,7 +134,7 @@ If you wish to develop the backend outside the Docker container:
 -   `...` (other configuration files and assets)
 
 ## Contributing
-Contributions are welcome! Please follow the GRACE methodology and submit pull requests.
+Contributions are welcome! Please create issue and submit pull requests.
 
 ## License
-[Specify your project's license here]
+[MIT License](./LICENSE)
